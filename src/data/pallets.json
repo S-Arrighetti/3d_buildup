@@ -1,0 +1,75 @@
+[
+  {
+    "id": "pmc",
+    "name": "PMC (P1P)",
+    "dimensions": { "length": 318, "width": 244, "height": 163 },
+    "innerDimensions": { "length": 298, "width": 224 },
+    "maxWeight": 4500,
+    "description": "Standard main deck pallet 318x244cm"
+  },
+  {
+    "id": "pag",
+    "name": "PAG (P1P Half)",
+    "dimensions": { "length": 318, "width": 224, "height": 163 },
+    "innerDimensions": { "length": 298, "width": 204 },
+    "maxWeight": 4500,
+    "description": "Main deck pallet 318x224cm"
+  },
+  {
+    "id": "pmcq",
+    "name": "PMC/Q (P6P)",
+    "dimensions": { "length": 318, "width": 244, "height": 244 },
+    "innerDimensions": { "length": 298, "width": 224 },
+    "maxWeight": 6800,
+    "description": "High main deck pallet 318x244cm"
+  },
+  {
+    "id": "ake",
+    "name": "AKE (LD3)",
+    "dimensions": { "length": 156, "width": 153, "height": 163 },
+    "maxWeight": 1588,
+    "description": "Lower deck container LD3"
+  },
+  {
+    "id": "ald",
+    "name": "ALD (LD3-45)",
+    "dimensions": { "length": 156, "width": 153, "height": 163 },
+    "maxWeight": 1588,
+    "description": "Lower deck contoured container LD3-45"
+  },
+  {
+    "id": "akn",
+    "name": "AKN (LD3 Wide)",
+    "dimensions": { "length": 200, "width": 153, "height": 163 },
+    "maxWeight": 1588,
+    "description": "Wide lower deck container"
+  },
+  {
+    "id": "dpe",
+    "name": "DPE (LD2)",
+    "dimensions": { "length": 156, "width": 119, "height": 163 },
+    "maxWeight": 1225,
+    "description": "Lower deck container LD2"
+  },
+  {
+    "id": "aaf",
+    "name": "AAF (LD6)",
+    "dimensions": { "length": 318, "width": 153, "height": 163 },
+    "maxWeight": 3175,
+    "description": "Lower deck container LD6"
+  },
+  {
+    "id": "aap",
+    "name": "AAP (LD9)",
+    "dimensions": { "length": 318, "width": 224, "height": 163 },
+    "maxWeight": 4625,
+    "description": "Lower deck container LD9"
+  },
+  {
+    "id": "custom",
+    "name": "Custom",
+    "dimensions": { "length": 300, "width": 200, "height": 160 },
+    "maxWeight": 5000,
+    "description": "Custom pallet - enter your own dimensions"
+  }
+]

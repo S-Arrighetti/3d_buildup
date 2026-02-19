@@ -1,0 +1,82 @@
+[
+  {
+    "id": "skid-standard",
+    "name": "Skid (Standard)",
+    "category": "skid",
+    "dimensions": { "length": 120, "width": 100, "height": 15 },
+    "color": "#8B4513",
+    "description": "Standard wooden skid/pallet"
+  },
+  {
+    "id": "skid-large",
+    "name": "Skid (Large)",
+    "category": "skid",
+    "dimensions": { "length": 200, "width": 120, "height": 15 },
+    "color": "#A0522D",
+    "description": "Large wooden skid/pallet"
+  },
+  {
+    "id": "lumber-4x4",
+    "name": "Lumber 4x4 (10x10cm)",
+    "category": "lumber",
+    "dimensions": { "length": 100, "width": 10, "height": 10 },
+    "color": "#DEB887",
+    "description": "Square lumber 10x10cm, 1m length"
+  },
+  {
+    "id": "lumber-2x4",
+    "name": "Lumber 2x4 (5x10cm)",
+    "category": "lumber",
+    "dimensions": { "length": 100, "width": 5, "height": 10 },
+    "color": "#D2B48C",
+    "description": "Rectangular lumber 5x10cm, 1m length"
+  },
+  {
+    "id": "lumber-2x2",
+    "name": "Lumber 2x2 (5x5cm)",
+    "category": "lumber",
+    "dimensions": { "length": 100, "width": 5, "height": 5 },
+    "color": "#C4A882",
+    "description": "Square lumber 5x5cm, 1m length"
+  },
+  {
+    "id": "spb-60",
+    "name": "SPB 60cm",
+    "category": "spacer",
+    "dimensions": { "length": 60, "width": 60, "height": 5 },
+    "color": "#4682B4",
+    "description": "Styrofoam Packing Board 60x60cm"
+  },
+  {
+    "id": "spb-90",
+    "name": "SPB 90cm",
+    "category": "spacer",
+    "dimensions": { "length": 90, "width": 90, "height": 5 },
+    "color": "#5B9BD5",
+    "description": "Styrofoam Packing Board 90x90cm"
+  },
+  {
+    "id": "belt-standard",
+    "name": "Cargo Belt (Standard)",
+    "category": "belt",
+    "dimensions": { "length": 300, "width": 5, "height": 2 },
+    "color": "#FF6600",
+    "description": "Standard cargo securing belt"
+  },
+  {
+    "id": "belt-ratchet",
+    "name": "Ratchet Strap",
+    "category": "belt",
+    "dimensions": { "length": 400, "width": 5, "height": 2 },
+    "color": "#FF4500",
+    "description": "Heavy duty ratchet strap"
+  },
+  {
+    "id": "cargo-net",
+    "name": "Cargo Net",
+    "category": "net",
+    "dimensions": { "length": 300, "width": 200, "height": 1 },
+    "color": "#228B22",
+    "description": "Cargo securing net"
+  }
+]

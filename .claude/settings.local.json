@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Bash(git ls-tree:*)",
+      "WebFetch(domain:pypi.org)",
+      "Bash(npm create:*)",
+      "Bash(npx --yes create-vite@latest:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx vite build)",
+      "Bash(echo:*)",
+      "Bash(npx vite)",
+      "WebFetch(domain:www.dsv.com)"
+    ]
+  }
+}
