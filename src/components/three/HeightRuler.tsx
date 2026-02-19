@@ -8,6 +8,15 @@ import { getMaxStackHeightWithMaterials } from '../../utils/collision';
 
 const RULER_STEP = 50; // cm
 
+function LineSeg({ points, color }: { points: [THREE.Vector3, THREE.Vector3]; color: string }) {
+  const line = useMemo(() => {
+    const geom = new THREE.BufferGeometry().setFromPoints(points);
+    const mat = new THREE.LineBasicMaterial({ color });
+    return new THREE.Line(geom, mat);
+  }, [points, color]);
+  return <primitive object={line} />;
+}
+
 export function HeightRuler() {
   const items = useCargoStore((s) => s.items);
   const placedMaterials = useMaterialStore((s) => s.placedMaterials);
@@ -36,30 +45,24 @@ export function HeightRuler() {
   return (
     <group>
       {/* Vertical ruler line */}
-      <line
-        geometry={
-          new THREE.BufferGeometry().setFromPoints([
-            new THREE.Vector3(rulerX, 0, rulerZ),
-            new THREE.Vector3(rulerX, Math.max(maxHeight + 50, 200), rulerZ),
-          ])
-        }
-      >
-        <lineBasicMaterial color="#888888" />
-      </line>
+      <LineSeg
+        points={[
+          new THREE.Vector3(rulerX, 0, rulerZ),
+          new THREE.Vector3(rulerX, Math.max(maxHeight + 50, 200), rulerZ),
+        ]}
+        color="#888888"
+      />
 
       {/* Tick marks and labels */}
       {rulerMarks.map((h) => (
         <group key={h}>
-          <line
-            geometry={
-              new THREE.BufferGeometry().setFromPoints([
-                new THREE.Vector3(rulerX - 5, h, rulerZ),
-                new THREE.Vector3(rulerX + 5, h, rulerZ),
-              ])
-            }
-          >
-            <lineBasicMaterial color="#888888" />
-          </line>
+          <LineSeg
+            points={[
+              new THREE.Vector3(rulerX - 5, h, rulerZ),
+              new THREE.Vector3(rulerX + 5, h, rulerZ),
+            ]}
+            color="#888888"
+          />
           <Text
             position={[rulerX - 15, h, rulerZ]}
             fontSize={7}
@@ -75,20 +78,17 @@ export function HeightRuler() {
       {/* Current max height indicator */}
       {maxHeight > 0 && (
         <group>
-          <line
-            geometry={
-              new THREE.BufferGeometry().setFromPoints([
-                new THREE.Vector3(rulerX - 5, maxHeight, rulerZ),
-                new THREE.Vector3(
-                  pallet.dimensions.length / 2 + 10,
-                  maxHeight,
-                  rulerZ
-                ),
-              ])
-            }
-          >
-            <lineBasicMaterial color="#ff6600" />
-          </line>
+          <LineSeg
+            points={[
+              new THREE.Vector3(rulerX - 5, maxHeight, rulerZ),
+              new THREE.Vector3(
+                pallet.dimensions.length / 2 + 10,
+                maxHeight,
+                rulerZ
+              ),
+            ]}
+            color="#ff6600"
+          />
           <Text
             position={[rulerX - 20, maxHeight, rulerZ]}
             fontSize={9}
