@@ -4,6 +4,14 @@ import { useContourStore } from '../../store/useContourStore';
 import { useActivePallet } from '../../store/usePalletStore';
 import { generateContourLinePoints } from '../../utils/contourCheck';
 
+function LineObj({ geometry, color }: { geometry: THREE.BufferGeometry; color: string }) {
+  const line = useMemo(() => {
+    const mat = new THREE.LineBasicMaterial({ color });
+    return new THREE.Line(geometry, mat);
+  }, [geometry, color]);
+  return <primitive object={line} />;
+}
+
 export function ContourLine() {
   const contours = useContourStore((s) => s.contours);
   const activeContourId = useContourStore((s) => s.activeContourId);
@@ -85,14 +93,10 @@ export function ContourLine() {
       )}
 
       {/* Front contour line */}
-      <line geometry={lineGeometry.front}>
-        <lineBasicMaterial color="#2266ff" linewidth={2} />
-      </line>
+      <LineObj geometry={lineGeometry.front} color="#2266ff" />
 
       {/* Back contour line */}
-      <line geometry={lineGeometry.back}>
-        <lineBasicMaterial color="#2266ff" linewidth={2} />
-      </line>
+      <LineObj geometry={lineGeometry.back} color="#2266ff" />
     </group>
   );
 }
