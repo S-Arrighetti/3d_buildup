@@ -26,6 +26,7 @@
   {
     "id": "ake",
     "name": "AKE (LD3)",
+    "shape": "container",
     "dimensions": { "length": 156, "width": 153, "height": 163 },
     "maxWeight": 1588,
     "description": "Lower deck container LD3"
@@ -33,6 +34,7 @@
   {
     "id": "ald",
     "name": "ALD (LD3-45)",
+    "shape": "container",
     "dimensions": { "length": 156, "width": 153, "height": 163 },
     "maxWeight": 1588,
     "description": "Lower deck contoured container LD3-45"
@@ -40,6 +42,7 @@
   {
     "id": "akn",
     "name": "AKN (LD3 Wide)",
+    "shape": "container",
     "dimensions": { "length": 200, "width": 153, "height": 163 },
     "maxWeight": 1588,
     "description": "Wide lower deck container"
@@ -47,6 +50,7 @@
   {
     "id": "dpe",
     "name": "DPE (LD2)",
+    "shape": "container",
     "dimensions": { "length": 156, "width": 119, "height": 163 },
     "maxWeight": 1225,
     "description": "Lower deck container LD2"
@@ -54,6 +58,7 @@
   {
     "id": "aaf",
     "name": "AAF (LD6)",
+    "shape": "container",
     "dimensions": { "length": 318, "width": 153, "height": 163 },
     "maxWeight": 3175,
     "description": "Lower deck container LD6"
@@ -61,6 +66,7 @@
   {
     "id": "aap",
     "name": "AAP (LD9)",
+    "shape": "container",
     "dimensions": { "length": 318, "width": 224, "height": 163 },
     "maxWeight": 4625,
     "description": "Lower deck container LD9"

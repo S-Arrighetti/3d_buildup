@@ -12,9 +12,12 @@ export interface Position {
 
 // --- Pallet / ULD ---
 
+export type PalletShape = 'pallet' | 'container';
+
 export interface PalletType {
   id: string;
   name: string;        // e.g. "PMC", "AKE", "PAG"
+  shape?: PalletShape; // default: 'pallet' (flat base only), 'container' = walls
   dimensions: Dimensions;
   innerDimensions?: { length: number; width: number }; // 내선 (rivet inner line)
   maxWeight: number;   // kg
