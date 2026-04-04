@@ -30,10 +30,10 @@
     "description": "B757-200PCF Main Deck C15 (base 317cm, top flat 130cm, H 195cm)"
   },
   {
-    "id": "b757-height-restriction",
-    "airline": "B757-200PCF",
-    "aircraftType": "B757-200PCF",
-    "position": "main-deck-height",
+    "id": "a320-lower",
+    "airline": "A320",
+    "aircraftType": "A320",
+    "position": "lower-deck",
     "points": [
       { "x": 0, "y": 224 },
       { "x": 61.5, "y": 224 },
@@ -42,6 +42,6 @@
       { "x": 145, "y": 114 },
       { "x": 158.5, "y": 0 }
     ],
-    "description": "B757-200PCF Height Restriction (B=114, C=174, D=208, E=224, F=123cm)"
+    "description": "A320 Lower Deck (B=114, C=174, D=208, E=224, F=123cm)"
   }
 ]
