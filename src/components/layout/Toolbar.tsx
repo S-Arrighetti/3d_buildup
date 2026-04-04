@@ -21,7 +21,9 @@ export function Toolbar() {
   const removeCargo = useCargoStore((s) => s.removeCargo);
   const removeMaterial = useMaterialStore((s) => s.removePlacedMaterial);
   const updateCargoRotation = useCargoStore((s) => s.updateCargoRotation);
+  const updateMaterialRotation = useMaterialStore((s) => s.updateMaterialRotation);
   const items = useCargoStore((s) => s.items);
+  const placedMaterials = useMaterialStore((s) => s.placedMaterials);
   const clearSelection = useSceneStore((s) => s.clearSelection);
 
   const handleDelete = () => {
@@ -36,11 +38,18 @@ export function Toolbar() {
   };
 
   const handleRotate = (delta: number) => {
-    if (!selectedObjectId || selectedObjectType !== 'cargo') return;
-    const cargo = items.find((c) => c.id === selectedObjectId);
-    if (cargo) {
-      useHistoryStore.getState().pushSnapshot();
-      updateCargoRotation(selectedObjectId, ((cargo.rotation + delta) % 360 + 360) % 360);
+    if (!selectedObjectId) return;
+    useHistoryStore.getState().pushSnapshot();
+    if (selectedObjectType === 'cargo') {
+      const cargo = items.find((c) => c.id === selectedObjectId);
+      if (cargo) {
+        updateCargoRotation(selectedObjectId, ((cargo.rotation + delta) % 360 + 360) % 360);
+      }
+    } else if (selectedObjectType === 'material') {
+      const mat = placedMaterials.find((m) => m.id === selectedObjectId);
+      if (mat) {
+        updateMaterialRotation(selectedObjectId, ((mat.rotation + delta) % 360 + 360) % 360);
+      }
     }
   };
 
@@ -69,7 +78,7 @@ export function Toolbar() {
       {/* Object actions */}
       <button
         onClick={() => handleRotate(-5)}
-        disabled={!selectedObjectId || selectedObjectType !== 'cargo'}
+        disabled={!selectedObjectId || (selectedObjectType !== 'cargo' && selectedObjectType !== 'material')}
         className="text-xs px-1.5 py-1 bg-gray-700 hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed text-gray-300 rounded"
         title="Rotate -5°"
       >
@@ -77,7 +86,7 @@ export function Toolbar() {
       </button>
       <button
         onClick={() => handleRotate(5)}
-        disabled={!selectedObjectId || selectedObjectType !== 'cargo'}
+        disabled={!selectedObjectId || (selectedObjectType !== 'cargo' && selectedObjectType !== 'material')}
         className="text-xs px-1.5 py-1 bg-gray-700 hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed text-gray-300 rounded"
         title="Rotate +5°"
       >
@@ -85,7 +94,7 @@ export function Toolbar() {
       </button>
       <button
         onClick={() => handleRotate(90)}
-        disabled={!selectedObjectId || selectedObjectType !== 'cargo'}
+        disabled={!selectedObjectId || (selectedObjectType !== 'cargo' && selectedObjectType !== 'material')}
         className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 disabled:opacity-30 disabled:cursor-not-allowed text-gray-300 rounded"
         title="Rotate +90°"
       >
