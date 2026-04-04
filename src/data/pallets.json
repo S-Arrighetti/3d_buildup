@@ -26,32 +26,40 @@
   {
     "id": "ake",
     "name": "AKE (LD3)",
-    "shape": "container",
+    "shape": "contoured",
     "dimensions": { "length": 156, "width": 153, "height": 163 },
+    "contourStart": 64,
+    "contourDepth": 47,
     "maxWeight": 1588,
     "description": "Lower deck container LD3"
   },
   {
     "id": "ald",
     "name": "ALD (LD3-45)",
-    "shape": "container",
+    "shape": "contoured",
     "dimensions": { "length": 156, "width": 153, "height": 163 },
+    "contourStart": 64,
+    "contourDepth": 47,
     "maxWeight": 1588,
     "description": "Lower deck contoured container LD3-45"
   },
   {
     "id": "akn",
     "name": "AKN (LD3 Wide)",
-    "shape": "container",
+    "shape": "contoured",
     "dimensions": { "length": 200, "width": 153, "height": 163 },
+    "contourStart": 64,
+    "contourDepth": 47,
     "maxWeight": 1588,
     "description": "Wide lower deck container"
   },
   {
     "id": "dpe",
     "name": "DPE (LD2)",
-    "shape": "container",
+    "shape": "contoured",
     "dimensions": { "length": 156, "width": 119, "height": 163 },
+    "contourStart": 64,
+    "contourDepth": 40,
     "maxWeight": 1225,
     "description": "Lower deck container LD2"
   },
