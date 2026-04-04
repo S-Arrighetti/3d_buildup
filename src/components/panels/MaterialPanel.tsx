@@ -10,12 +10,13 @@ const CATEGORY_LABELS: Record<MaterialCategory, string> = {
   skid: 'Skid',
   lumber: 'Lumber',
   spacer: 'SPB / Spacer',
+  shelf: 'Shelf / Filler',
   belt: 'Belt / Strap',
   net: 'Net',
   other: 'Other',
 };
 
-const CATEGORY_ORDER: MaterialCategory[] = ['skid', 'lumber', 'spacer', 'belt', 'net', 'other'];
+const CATEGORY_ORDER: MaterialCategory[] = ['skid', 'lumber', 'spacer', 'shelf', 'belt', 'net', 'other'];
 
 export function MaterialPanel() {
   const materialTypes = useMaterialStore((s) => s.materialTypes);

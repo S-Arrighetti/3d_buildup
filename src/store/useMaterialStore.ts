@@ -87,7 +87,21 @@ export const useMaterialStore = create<MaterialStore>()(
     }),
     {
       name: 'buildup-material-store',
+      version: 1,
       partialize: (state) => ({ materialTypes: state.materialTypes }),
+      migrate: (_persisted) => {
+        const state = _persisted as Pick<MaterialStore, 'materialTypes'>;
+        const defaults = defaultMaterials as MaterialType[];
+        // Add any new default materials that aren't in the stored list
+        const storedIds = new Set(state.materialTypes.map((m) => m.id));
+        const newTypes = defaults.filter((d) => !storedIds.has(d.id));
+        // Merge meshShape from defaults into existing types
+        const merged = state.materialTypes.map((m) => {
+          const def = defaults.find((d) => d.id === m.id);
+          return def?.meshShape ? { ...m, meshShape: def.meshShape } : m;
+        });
+        return { materialTypes: [...merged, ...newTypes] };
+      },
     }
   )
 );

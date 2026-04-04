@@ -53,19 +53,21 @@ export function PalletMesh() {
 
   return (
     <group>
-      {/* Pallet/Container base */}
-      <mesh
-        position={[0, -PALLET_THICKNESS / 2, 0]}
-        geometry={geometry}
-        receiveShadow
-      >
-        <meshStandardMaterial
-          color={(isContainer || isContoured) ? '#8a9bae' : '#b8860b'}
-          roughness={0.8}
-          metalness={(isContainer || isContoured) ? 0.3 : 0.1}
-        />
-        <Edges color={(isContainer || isContoured) ? '#5a6a7a' : '#8B6914'} threshold={15} />
-      </mesh>
+      {/* Pallet base (only for flat pallets — containers have their own floor) */}
+      {!isContainer && !isContoured && (
+        <mesh
+          position={[0, -PALLET_THICKNESS / 2, 0]}
+          geometry={geometry}
+          receiveShadow
+        >
+          <meshStandardMaterial
+            color="#b8860b"
+            roughness={0.8}
+            metalness={0.1}
+          />
+          <Edges color="#8B6914" threshold={15} />
+        </mesh>
+      )}
 
       {/* Container walls (rectangular) */}
       {isContainer && (
