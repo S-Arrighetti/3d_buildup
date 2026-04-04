@@ -47,6 +47,17 @@ export const useContourStore = create<ContourStore>()(
         return contours.find((c) => c.id === activeContourId) ?? null;
       },
     }),
-    { name: 'buildup-contour-store' }
+    {
+      name: 'buildup-contour-store',
+      version: 1,
+      migrate: () => {
+        // v0→v1: replace all old contours with new B757-200PCF contours
+        return {
+          contours: defaultContours as ContourProfile[],
+          activeContourId: null,
+          showContour: false,
+        };
+      },
+    }
   )
 );
