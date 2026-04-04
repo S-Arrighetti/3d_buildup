@@ -53,12 +53,15 @@ export interface CargoItem {
 
 // --- Material ---
 
-export type MaterialCategory = 'skid' | 'lumber' | 'spacer' | 'belt' | 'net' | 'other';
+export type MaterialCategory = 'skid' | 'lumber' | 'spacer' | 'belt' | 'net' | 'shelf' | 'other';
+
+export type MeshShape = 'box' | 'wedge';
 
 export interface MaterialType {
   id: string;
   name: string;
   category: MaterialCategory;
+  meshShape?: MeshShape; // default 'box', 'wedge' = triangular prism
   dimensions: Dimensions;
   color: string;
   description?: string;

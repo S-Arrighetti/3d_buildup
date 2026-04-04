@@ -78,5 +78,14 @@
     "dimensions": { "length": 300, "width": 200, "height": 1 },
     "color": "#228B22",
     "description": "Cargo securing net"
+  },
+  {
+    "id": "ld3-shelf",
+    "name": "LD3 Shelf",
+    "category": "shelf",
+    "meshShape": "wedge",
+    "dimensions": { "length": 150, "width": 47, "height": 64 },
+    "color": "#A8C4D8",
+    "description": "Triangular shelf that fills the LD3 contour angle, making the floor flat"
   }
 ]

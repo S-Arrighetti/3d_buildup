@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect } from 'react';
+import { useRef, useState, useCallback, useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import type { ThreeEvent } from '@react-three/fiber';
 import { useThree } from '@react-three/fiber';
@@ -163,7 +163,7 @@ function SingleMaterialMesh({
       position={[placed.position.x, placed.position.y, placed.position.z]}
       rotation={[0, (placed.rotation * Math.PI) / 180, 0]}
     >
-      {/* Material box - click to select, drag to move */}
+      {/* Material mesh - click to select, drag to move */}
       <mesh
         castShadow
         receiveShadow
@@ -171,7 +171,11 @@ function SingleMaterialMesh({
         onPointerOver={() => { setHovered(true); document.body.style.cursor = 'grab'; }}
         onPointerOut={() => { if (!dragging) { setHovered(false); document.body.style.cursor = 'auto'; } }}
       >
-        <boxGeometry args={[length, height, width]} />
+        {matType.meshShape === 'wedge' ? (
+          <WedgeGeometry length={length} width={width} height={height} />
+        ) : (
+          <boxGeometry args={[length, height, width]} />
+        )}
         <meshStandardMaterial
           color={matType.color}
           transparent
@@ -195,4 +199,64 @@ function SingleMaterialMesh({
       )}
     </group>
   );
+}
+
+/**
+ * Triangular prism (wedge) geometry for LD3 Shelf.
+ *
+ * Cross-section (viewed from +Z):
+ *
+ *        (0, height)
+ *       /|
+ *      / |
+ *     /  |           height = contour start (64cm)
+ *    /   |           width  = contour depth  (47cm)
+ *   /    |           length = shelf length  (150cm)
+ *  /_____|
+ * (0,0)  (width,0)
+ *
+ * The slope face goes from bottom-left to top-right,
+ * so when placed in the LD3 corner the shelf fills the angled gap.
+ */
+function WedgeGeometry({ length, width, height }: { length: number; width: number; height: number }) {
+  const geo = useMemo(() => {
+    const hL = length / 2;
+    const hW = width / 2;
+    const hH = height / 2;
+
+    // 6 vertices of a triangular prism, centered at origin
+    //   Front face (+Z): triangle   Back face (−Z): triangle
+    const vertices = new Float32Array([
+      // Front face (z = +hL)
+      -hW, -hH, hL,   //  0: bottom-left
+       hW, -hH, hL,   //  1: bottom-right
+      -hW,  hH, hL,   //  2: top-left
+      // Back face (z = -hL)
+      -hW, -hH, -hL,  //  3: bottom-left
+       hW, -hH, -hL,  //  4: bottom-right
+      -hW,  hH, -hL,  //  5: top-left
+    ]);
+
+    // Triangles (CCW winding for front-facing)
+    const indices = [
+      // Front triangle
+      0, 1, 2,
+      // Back triangle
+      3, 5, 4,
+      // Bottom quad (two triangles)
+      0, 3, 4,  0, 4, 1,
+      // Left quad (vertical wall)
+      0, 2, 5,  0, 5, 3,
+      // Slope quad (hypotenuse)
+      1, 4, 5,  1, 5, 2,
+    ];
+
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+    g.setIndex(indices);
+    g.computeVertexNormals();
+    return g;
+  }, [length, width, height]);
+
+  return <primitive object={geo} attach="geometry" />;
 }
