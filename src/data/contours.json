@@ -30,10 +30,10 @@
     "description": "B757-200PCF Main Deck C15 (base 317cm, top flat 130cm, H 195cm)"
   },
   {
-    "id": "a320-lower",
+    "id": "a320-main",
     "airline": "A320",
     "aircraftType": "A320",
-    "position": "lower-deck",
+    "position": "main-deck",
     "points": [
       { "x": 0, "y": 224 },
       { "x": 61.5, "y": 224 },
@@ -42,6 +42,6 @@
       { "x": 145, "y": 114 },
       { "x": 158.5, "y": 0 }
     ],
-    "description": "A320 Lower Deck (B=114, C=174, D=208, E=224, F=123cm)"
+    "description": "A320 Main Deck (B=114, C=174, D=208, E=224, F=123cm)"
   }
 ]
