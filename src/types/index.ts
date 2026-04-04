@@ -12,14 +12,17 @@ export interface Position {
 
 // --- Pallet / ULD ---
 
-export type PalletShape = 'pallet' | 'container';
+export type PalletShape = 'pallet' | 'container' | 'contoured';
 
 export interface PalletType {
   id: string;
   name: string;        // e.g. "PMC", "AKE", "PAG"
-  shape?: PalletShape; // default: 'pallet' (flat base only), 'container' = walls
+  shape?: PalletShape; // 'pallet' (flat), 'container' (box walls), 'contoured' (LD3 angled)
   dimensions: Dimensions;
   innerDimensions?: { length: number; width: number }; // 내선 (rivet inner line)
+  /** Contour cut: height where the slope starts, and how far inward it cuts at the base */
+  contourStart?: number;  // cm from base where slope begins (e.g. 64)
+  contourDepth?: number;  // cm cut inward at the base (e.g. 50)
   maxWeight: number;   // kg
   description?: string;
 }
