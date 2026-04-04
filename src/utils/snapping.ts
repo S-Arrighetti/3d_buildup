@@ -1,4 +1,4 @@
-import type { CargoItem, Position, Dimensions, PlacedMaterial, MaterialType } from '../types';
+import type { CargoItem, Position, Dimensions, PlacedMaterial, MaterialType, MeshShape } from '../types';
 
 const SNAP_THRESHOLD = 5; // cm - snap distance
 
@@ -117,6 +117,55 @@ export function getMaterialAABB(pm: PlacedMaterial, mt: MaterialType): AABB {
   };
 }
 
+/**
+ * Get the actual top-surface Y of a wedge material at a given XZ query point.
+ *
+ * Wedge cross-section (Z = width axis, Y = height axis, X = length/extrusion):
+ *   A(−hW, +hH) ──── B(+hW, +hH)   ← flat top
+ *                       |
+ *                     / |
+ *                   /   |   height (Y)
+ *                 /     |
+ *   C(+hW, −hH) ─┘     width (Z)
+ *
+ * At local Z: the wedge exists from Z=−hW (top only, thin edge) to Z=+hW (full height, thick edge).
+ * The slope goes from A(−hW, +hH) to C(+hW, −hH).
+ * At any local Z, the wedge bottom Y = lerp(+hH, −hH, t) where t = (localZ + hW) / width.
+ * The shelf top is always at +hH (flat). Cargo sits there if the wedge has material beneath.
+ */
+function getMaterialTopY(
+  queryX: number, queryZ: number,
+  pm: PlacedMaterial, mt: MaterialType
+): number | null {
+  const aabb = getMaterialAABB(pm, mt);
+
+  // Quick AABB check
+  if (queryX < aabb.minX || queryX > aabb.maxX) return null;
+  if (queryZ < aabb.minZ || queryZ > aabb.maxZ) return null;
+
+  // For box shapes, just return maxY
+  if (!mt.meshShape || mt.meshShape === 'box') {
+    return aabb.maxY;
+  }
+
+  // For wedge: transform query to local Z to check if within triangle
+  const rad = (pm.rotation * Math.PI) / 180;
+  const cosA = Math.cos(rad);
+  const sinA = Math.sin(rad);
+  const dx = queryX - pm.position.x;
+  const dz = queryZ - pm.position.z;
+  // Local Z (width axis = triangle base direction)
+  const localZ = -dx * sinA + dz * cosA;
+
+  const halfW = mt.dimensions.width / 2;
+  // t: 0 at thin edge (localZ = −hW), 1 at thick edge (localZ = +hW)
+  const t = (localZ + halfW) / (2 * halfW);
+  if (t < 0.01) return null; // too thin, no real surface
+
+  // The flat top surface IS at maxY across the entire width
+  return aabb.maxY;
+}
+
 export function findStackHeight(
   pos: Position,
   movingCargo: CargoItem,
@@ -143,18 +192,34 @@ export function findStackHeight(
     }
   }
 
-  // Check placed materials (skid, lumber, etc.)
+  // Check placed materials (skid, lumber, shelf, etc.)
   if (placedMaterials && materialTypes) {
     for (const pm of placedMaterials) {
       const mt = materialTypes.find((m) => m.id === pm.materialTypeId);
       if (!mt) continue;
-      const mAABB = getMaterialAABB(pm, mt);
 
-      const overlapX = pos.x - halfW < mAABB.maxX && pos.x + halfW > mAABB.minX;
-      const overlapZ = pos.z - halfD < mAABB.maxZ && pos.z + halfD > mAABB.minZ;
-
-      if (overlapX && overlapZ) {
-        maxY = Math.max(maxY, mAABB.maxY);
+      if (mt.meshShape === 'wedge') {
+        // For wedge: check corners of cargo footprint against the wedge surface
+        const corners = [
+          [pos.x - halfW, pos.z - halfD],
+          [pos.x + halfW, pos.z - halfD],
+          [pos.x - halfW, pos.z + halfD],
+          [pos.x + halfW, pos.z + halfD],
+        ];
+        for (const [cx, cz] of corners) {
+          const topY = getMaterialTopY(cx, cz, pm, mt);
+          if (topY !== null) {
+            maxY = Math.max(maxY, topY);
+            break; // one corner on the shelf is enough
+          }
+        }
+      } else {
+        const mAABB = getMaterialAABB(pm, mt);
+        const overlapX = pos.x - halfW < mAABB.maxX && pos.x + halfW > mAABB.minX;
+        const overlapZ = pos.z - halfD < mAABB.maxZ && pos.z + halfD > mAABB.minZ;
+        if (overlapX && overlapZ) {
+          maxY = Math.max(maxY, mAABB.maxY);
+        }
       }
     }
   }
