@@ -203,51 +203,55 @@ function SingleMaterialMesh({
 
 /**
  * Triangular prism (wedge) geometry for LD3 Shelf.
+ * Axes match boxGeometry convention: X = length, Y = height, Z = width.
  *
- * Cross-section (viewed from +Z, X = width, Y = height):
+ * Cross-section (viewed from +X, Z = width, Y = height):
  *
  *  A ─────────── B     ← flat top surface (cargo goes here)
  *                |
- *              / |     height = contourStart (64cm)
- *            /   |     width  = contourDepth (47cm)
- *          /     |     length = shelf length (150cm, along Z)
+ *              / |     height = contourStart (64cm, Y axis)
+ *            /   |     width  = contourDepth (47cm, Z axis)
+ *          /     |     length = shelf length (150cm, X axis = extrusion)
  *        /       |
  *      /         |
  *    C ──────────┘
  *
- * A = top-left, B = top-right, C = bottom-left
+ * A = (−hW, +hH)  thin edge top
+ * B = (+hW, +hH)  thick edge top (against container wall)
+ * C = (+hW, −hH)  thick edge bottom
+ *
  * Flat top (A→B) is the shelf surface for cargo.
- * Right side (B→C) is vertical, leans against the container wall.
+ * +Z side (B→C) is vertical, leans against the container wall.
  * Slope (C→A) rests on the LD3 contour angle.
  */
 function WedgeGeometry({ length, width, height }: { length: number; width: number; height: number }) {
   const geo = useMemo(() => {
-    const hL = length / 2;
-    const hW = width / 2;
-    const hH = height / 2;
+    const hL = length / 2;  // X: extrusion direction (along container length)
+    const hW = width / 2;   // Z: triangle base (contour depth)
+    const hH = height / 2;  // Y: triangle height
 
-    // 6 vertices: front triangle (z=+hL) + back triangle (z=-hL)
+    // 6 vertices: right face (x=+hL) + left face (x=-hL)
     const vertices = new Float32Array([
-      // Front face (z = +hL)
-      -hW,  hH,  hL,   //  0: A front (top-left)
-       hW,  hH,  hL,   //  1: B front (top-right)
-       hW, -hH,  hL,   //  2: C front (bottom-right)
-      // Back face (z = -hL)
-      -hW,  hH, -hL,   //  3: A back  (top-left)
-       hW,  hH, -hL,   //  4: B back  (top-right)
-       hW, -hH, -hL,   //  5: C back  (bottom-right)
+      // Right face (x = +hL)
+       hL,  hH, -hW,   //  0: A right (top, thin edge)
+       hL,  hH,  hW,   //  1: B right (top, thick edge)
+       hL, -hH,  hW,   //  2: C right (bottom, thick edge)
+      // Left face (x = -hL)
+      -hL,  hH, -hW,   //  3: A left  (top, thin edge)
+      -hL,  hH,  hW,   //  4: B left  (top, thick edge)
+      -hL, -hH,  hW,   //  5: C left  (bottom, thick edge)
     ]);
 
     const indices = [
-      // Front triangle (CCW from outside = looking at -Z)
+      // Right triangle (+X face, CCW from outside)
       0, 2, 1,
-      // Back triangle (CCW from outside = looking at +Z)
+      // Left triangle (−X face, CCW from outside)
       3, 4, 5,
-      // Top quad (flat shelf surface, A→B)
+      // Top quad (flat shelf surface, horizontal)
       0, 1, 4,  0, 4, 3,
-      // Right quad (vertical wall, B→C)
+      // Back quad (vertical wall, +Z side)
       1, 2, 5,  1, 5, 4,
-      // Slope quad (hypotenuse, C→A)
+      // Slope quad (hypotenuse, from thin bottom to thick top)
       2, 0, 3,  2, 3, 5,
     ];
 
