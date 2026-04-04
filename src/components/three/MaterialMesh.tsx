@@ -204,19 +204,21 @@ function SingleMaterialMesh({
 /**
  * Triangular prism (wedge) geometry for LD3 Shelf.
  *
- * Cross-section (viewed from +Z):
+ * Cross-section (viewed from +Z, X = width, Y = height):
  *
- *        (0, height)
- *       /|
- *      / |
- *     /  |           height = contour start (64cm)
- *    /   |           width  = contour depth  (47cm)
- *   /    |           length = shelf length  (150cm)
- *  /_____|
- * (0,0)  (width,0)
+ *  A ─────────── B     ← flat top surface (cargo goes here)
+ *                |
+ *              / |     height = contourStart (64cm)
+ *            /   |     width  = contourDepth (47cm)
+ *          /     |     length = shelf length (150cm, along Z)
+ *        /       |
+ *      /         |
+ *    C ──────────┘
  *
- * The slope face goes from bottom-left to top-right,
- * so when placed in the LD3 corner the shelf fills the angled gap.
+ * A = top-left, B = top-right, C = bottom-left
+ * Flat top (A→B) is the shelf surface for cargo.
+ * Right side (B→C) is vertical, leans against the container wall.
+ * Slope (C→A) rests on the LD3 contour angle.
  */
 function WedgeGeometry({ length, width, height }: { length: number; width: number; height: number }) {
   const geo = useMemo(() => {
@@ -224,31 +226,29 @@ function WedgeGeometry({ length, width, height }: { length: number; width: numbe
     const hW = width / 2;
     const hH = height / 2;
 
-    // 6 vertices of a triangular prism, centered at origin
-    //   Front face (+Z): triangle   Back face (−Z): triangle
+    // 6 vertices: front triangle (z=+hL) + back triangle (z=-hL)
     const vertices = new Float32Array([
       // Front face (z = +hL)
-      -hW, -hH, hL,   //  0: bottom-left
-       hW, -hH, hL,   //  1: bottom-right
-      -hW,  hH, hL,   //  2: top-left
+      -hW,  hH,  hL,   //  0: A front (top-left)
+       hW,  hH,  hL,   //  1: B front (top-right)
+       hW, -hH,  hL,   //  2: C front (bottom-right)
       // Back face (z = -hL)
-      -hW, -hH, -hL,  //  3: bottom-left
-       hW, -hH, -hL,  //  4: bottom-right
-      -hW,  hH, -hL,  //  5: top-left
+      -hW,  hH, -hL,   //  3: A back  (top-left)
+       hW,  hH, -hL,   //  4: B back  (top-right)
+       hW, -hH, -hL,   //  5: C back  (bottom-right)
     ]);
 
-    // Triangles (CCW winding for front-facing)
     const indices = [
-      // Front triangle
-      0, 1, 2,
-      // Back triangle
-      3, 5, 4,
-      // Bottom quad (two triangles)
-      0, 3, 4,  0, 4, 1,
-      // Left quad (vertical wall)
-      0, 2, 5,  0, 5, 3,
-      // Slope quad (hypotenuse)
-      1, 4, 5,  1, 5, 2,
+      // Front triangle (CCW from outside = looking at -Z)
+      0, 2, 1,
+      // Back triangle (CCW from outside = looking at +Z)
+      3, 4, 5,
+      // Top quad (flat shelf surface, A→B)
+      0, 1, 4,  0, 4, 3,
+      // Right quad (vertical wall, B→C)
+      1, 2, 5,  1, 5, 4,
+      // Slope quad (hypotenuse, C→A)
+      2, 0, 3,  2, 3, 5,
     ];
 
     const g = new THREE.BufferGeometry();
