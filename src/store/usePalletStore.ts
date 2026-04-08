@@ -61,9 +61,9 @@ export const usePalletStore = create<PalletStore>()(
     }),
     {
       name: 'buildup-pallet-store',
-      version: 3,
+      version: 4,
       migrate: () => {
-        // v→3: replace with full defaults (new ULD types added)
+        // v→4: replace with full defaults (PGA/PLA/ALF/AKH/AAV/P6P/PMC16 added)
         return {
           palletTypes: defaultPallets as PalletType[],
           companies: defaultCompanies as CompanyPallet[],
