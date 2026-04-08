@@ -61,23 +61,14 @@ export const usePalletStore = create<PalletStore>()(
     }),
     {
       name: 'buildup-pallet-store',
-      version: 2,
-      migrate: (_persisted) => {
-        // Merge shape + contour fields from defaults into stored palletTypes
-        const state = _persisted as PalletStore;
-        const defaults = defaultPallets as PalletType[];
+      version: 3,
+      migrate: () => {
+        // v→3: replace with full defaults (new ULD types added)
         return {
-          ...state,
-          palletTypes: state.palletTypes.map((p) => {
-            const def = defaults.find((d) => d.id === p.id);
-            if (!def) return p;
-            return {
-              ...p,
-              shape: def.shape ?? p.shape,
-              contourStart: def.contourStart ?? p.contourStart,
-              contourDepth: def.contourDepth ?? p.contourDepth,
-            };
-          }),
+          palletTypes: defaultPallets as PalletType[],
+          companies: defaultCompanies as CompanyPallet[],
+          selectedPalletId: 'pmc',
+          selectedCompany: null,
         };
       },
     }
