@@ -16,14 +16,6 @@
     "description": "Main deck pallet 318x224cm"
   },
   {
-    "id": "pmcq",
-    "name": "PMC/Q (P6P)",
-    "dimensions": { "length": 318, "width": 244, "height": 244 },
-    "innerDimensions": { "length": 298, "width": 224 },
-    "maxWeight": 6800,
-    "description": "High main deck pallet 318x244cm"
-  },
-  {
     "id": "ake",
     "name": "AKE (LD3)",
     "shape": "contoured",
@@ -32,82 +24,6 @@
     "contourDepth": 47,
     "maxWeight": 1588,
     "description": "Lower deck container LD3"
-  },
-  {
-    "id": "ald",
-    "name": "ALD (LD3-45)",
-    "shape": "contoured",
-    "dimensions": { "length": 156, "width": 153, "height": 163 },
-    "contourStart": 64,
-    "contourDepth": 47,
-    "maxWeight": 1588,
-    "description": "Lower deck contoured container LD3-45"
-  },
-  {
-    "id": "akn",
-    "name": "AKN (LD3 Wide)",
-    "shape": "contoured",
-    "dimensions": { "length": 200, "width": 153, "height": 163 },
-    "contourStart": 64,
-    "contourDepth": 47,
-    "maxWeight": 1588,
-    "description": "Wide lower deck container"
-  },
-  {
-    "id": "dpe",
-    "name": "DPE (LD2)",
-    "shape": "contoured",
-    "dimensions": { "length": 156, "width": 119, "height": 163 },
-    "contourStart": 64,
-    "contourDepth": 40,
-    "maxWeight": 1225,
-    "description": "Lower deck container LD2"
-  },
-  {
-    "id": "akh",
-    "name": "AKH (LD3-45W)",
-    "shape": "contoured",
-    "dimensions": { "length": 156, "width": 153, "height": 163 },
-    "contourStart": 64,
-    "contourDepth": 47,
-    "maxWeight": 1588,
-    "description": "Lower deck container LD3-45 wide door"
-  },
-  {
-    "id": "aaf",
-    "name": "AAF (LD6)",
-    "shape": "container",
-    "dimensions": { "length": 318, "width": 153, "height": 163 },
-    "maxWeight": 3175,
-    "description": "Lower deck container LD6"
-  },
-  {
-    "id": "alf",
-    "name": "ALF (LD6 Contoured)",
-    "shape": "contoured",
-    "dimensions": { "length": 318, "width": 153, "height": 163 },
-    "contourStart": 64,
-    "contourDepth": 47,
-    "maxWeight": 3175,
-    "description": "Lower deck contoured container LD6"
-  },
-  {
-    "id": "aap",
-    "name": "AAP (LD9)",
-    "shape": "container",
-    "dimensions": { "length": 318, "width": 224, "height": 163 },
-    "maxWeight": 4625,
-    "description": "Lower deck container LD9"
-  },
-  {
-    "id": "aav",
-    "name": "AAV (LD9 Contoured)",
-    "shape": "contoured",
-    "dimensions": { "length": 318, "width": 224, "height": 163 },
-    "contourStart": 64,
-    "contourDepth": 47,
-    "maxWeight": 4625,
-    "description": "Lower deck contoured container LD9"
   },
   {
     "id": "pga",
@@ -121,31 +37,8 @@
     "id": "pla",
     "name": "PLA (P9P)",
     "dimensions": { "length": 318, "width": 153, "height": 163 },
-    "innerDimensions": { "length": 298, "width": 133 },
+    "innerDimensions": { "length": 290, "width": 126 },
     "maxWeight": 3175,
     "description": "Half-width main deck pallet 318x153cm"
-  },
-  {
-    "id": "p6p",
-    "name": "P6P (20ft)",
-    "dimensions": { "length": 606, "width": 244, "height": 244 },
-    "innerDimensions": { "length": 586, "width": 224 },
-    "maxWeight": 11340,
-    "description": "20ft main deck pallet 606x244cm"
-  },
-  {
-    "id": "pmc16",
-    "name": "PMC (16ft)",
-    "dimensions": { "length": 498, "width": 244, "height": 244 },
-    "innerDimensions": { "length": 478, "width": 224 },
-    "maxWeight": 9070,
-    "description": "16ft main deck pallet 498x244cm"
-  },
-  {
-    "id": "custom",
-    "name": "Custom",
-    "dimensions": { "length": 300, "width": 200, "height": 160 },
-    "maxWeight": 5000,
-    "description": "Custom pallet - enter your own dimensions"
   }
 ]
