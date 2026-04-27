@@ -61,9 +61,9 @@ export const usePalletStore = create<PalletStore>()(
     }),
     {
       name: 'buildup-pallet-store',
-      version: 4,
+      version: 5,
       migrate: () => {
-        // v→4: replace with full defaults (PGA/PLA/ALF/AKH/AAV/P6P/PMC16 added)
+        // v→5: reset default pallet list to PMC/PAG/PLA/AKE only
         return {
           palletTypes: defaultPallets as PalletType[],
           companies: defaultCompanies as CompanyPallet[],
