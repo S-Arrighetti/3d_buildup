@@ -1,43 +1,35 @@
 [
   {
     "id": "pmc",
-    "name": "PMC (P1P)",
+    "name": "PMC",
     "dimensions": { "length": 318, "width": 244, "height": 163 },
-    "innerDimensions": { "length": 298, "width": 224 },
+    "innerDimensions": { "length": 300, "width": 229 },
     "maxWeight": 4500,
     "description": "Standard main deck pallet 318x244cm"
   },
   {
     "id": "pag",
-    "name": "PAG (P1P Half)",
+    "name": "PAG",
     "dimensions": { "length": 318, "width": 224, "height": 163 },
-    "innerDimensions": { "length": 298, "width": 204 },
+    "innerDimensions": { "length": 300, "width": 208 },
     "maxWeight": 4500,
     "description": "Main deck pallet 318x224cm"
   },
   {
     "id": "ake",
-    "name": "AKE (LD3)",
+    "name": "AKE",
     "shape": "contoured",
-    "dimensions": { "length": 156, "width": 153, "height": 163 },
+    "dimensions": { "length": 201, "width": 153, "height": 148 },
     "contourStart": 64,
-    "contourDepth": 47,
+    "contourDepth": 59,
     "maxWeight": 1588,
     "description": "Lower deck container LD3"
   },
   {
-    "id": "pga",
-    "name": "PGA (P1P)",
-    "dimensions": { "length": 318, "width": 224, "height": 163 },
-    "innerDimensions": { "length": 298, "width": 204 },
-    "maxWeight": 4626,
-    "description": "Main deck pallet 318x224cm (10ft)"
-  },
-  {
     "id": "pla",
-    "name": "PLA (P9P)",
+    "name": "PLA",
     "dimensions": { "length": 318, "width": 153, "height": 163 },
-    "innerDimensions": { "length": 290, "width": 126 },
+    "innerDimensions": { "length": 290, "width": 128 },
     "maxWeight": 3175,
     "description": "Half-width main deck pallet 318x153cm"
   }

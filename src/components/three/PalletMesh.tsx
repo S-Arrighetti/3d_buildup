@@ -291,42 +291,20 @@ function ContouredWalls({
   contourStart: number; contourDepth: number;
 }) {
   const wallH = height - PALLET_THICKNESS;
-  const hL = length / 2;
-  const hW = width / 2;
+  const halfWidth = width / 2;
+  const halfLength = length / 2;
 
   // Key Y positions
   const topY = wallH;
   const slopeY = contourStart; // where the slope begins (from base)
 
   // X positions: right side is contoured
-  const xRight = hL;                    // top-right X (full width)
-  const xContour = hL - contourDepth;   // bottom-right X (after cut)
-
-  // Build the contoured side wall geometry (+X side, pentagon shape)
-  // The wall is in the XY plane, extruded along Z (width)
-  const contouredSideGeo = useMemo(() => {
-    const shape = new THREE.Shape();
-    // Pentagon profile (viewed from +Z):
-    //   Start at bottom-left of this wall panel (which is xContour, 0)
-    //   Go up to slope start, then out to full width, up to top, across top, down
-    shape.moveTo(xContour, 0);       // bottom contour point
-    shape.lineTo(xRight, slopeY);    // slope up to full width
-    shape.lineTo(xRight, topY);      // up to top-right
-    shape.lineTo(xRight, topY);      // top-right (same point)
-    // We only need the right wall, so this is just the profile
-
-    // Actually, let's build this as a BufferGeometry for the right wall panel
-    // The wall panel in XY plane, then we place two copies at z = ±hW
-    return null; // we'll use a different approach below
-  }, []);
+  const xRight = halfWidth;                    // top-right X (full width)
+  const xContour = halfWidth - contourDepth;   // bottom-right X (after cut)
 
   // For complex shapes, use custom BufferGeometry
-  // Right wall: pentagon cross-section extruded along Z
+  // Right wall: pentagon cross-section extruded along Z (length)
   const rightWallGeo = useMemo(() => {
-    // Profile points (X, Y) for the right wall — viewing from outside (+Z)
-    //   bottom: from xContour at y=0, slope to xRight at y=slopeY, then straight up to topY
-    // We create a thin wall (WALL_THICKNESS) by offsetting inward
-
     const shape = new THREE.Shape();
     shape.moveTo(0, 0);                           // bottom-left (xContour, 0)
     shape.lineTo(contourDepth, slopeY);            // slope point (xRight, slopeY)
@@ -338,24 +316,19 @@ function ContouredWalls({
 
     const extrudeSettings = {
       steps: 1,
-      depth: width - WALL_THICKNESS * 2,
+      depth: length - WALL_THICKNESS * 2,
       bevelEnabled: false,
     };
     return new THREE.ExtrudeGeometry(shape, extrudeSettings);
-  }, [width, topY, slopeY, contourDepth]);
+  }, [length, topY, slopeY, contourDepth]);
 
-  // Front wall (−Z): pentagon shape
+  // Front wall (−Z): full rectangular shape (no contour)
   const frontWallGeo = useMemo(() => {
     const shape = new THREE.Shape();
-    // Viewed from outside (−Z looking in), left-to-right:
-    // BL(-hL, 0) → TL(-hL, topY) → TR(+hL, topY) → slope(+hL, slopeY) → BC(xContour-hL.. )
-    // Wait, let's think in local coords. The front wall spans the full width of the container.
-    // X range: -hL to +hL.  But the +X bottom corner is cut.
-    shape.moveTo(-hL, 0);                   // bottom-left
-    shape.lineTo(-hL, topY);                // top-left
-    shape.lineTo(hL, topY);                 // top-right
-    shape.lineTo(hL, slopeY);               // right side down to slope start
-    shape.lineTo(hL - contourDepth, 0);     // slope down to contour point
+    shape.moveTo(-halfWidth, 0);                   // bottom-left
+    shape.lineTo(-halfWidth, topY);                // top-left
+    shape.lineTo(halfWidth, topY);                 // top-right
+    shape.lineTo(halfWidth, 0);                    // bottom-right
     shape.closePath();
 
     const extrudeSettings = {
@@ -364,53 +337,51 @@ function ContouredWalls({
       bevelEnabled: false,
     };
     return new THREE.ExtrudeGeometry(shape, extrudeSettings);
-  }, [hL, topY, slopeY, contourDepth]);
+  }, [halfWidth, topY]);
 
   // Top edge wireframe (rectangle — top is still rectangular)
   const topEdge: [number, number, number][] = [
-    [-hL, topY, -hW],
-    [hL, topY, -hW],
-    [hL, topY, hW],
-    [-hL, topY, hW],
-    [-hL, topY, -hW],
+    [-halfWidth, topY, -halfLength],
+    [halfWidth, topY, -halfLength],
+    [halfWidth, topY, halfLength],
+    [-halfWidth, topY, halfLength],
+    [-halfWidth, topY, -halfLength],
   ];
 
-  // Bottom edge wireframe (with contour)
+  // Bottom edge wireframe (full rectangle, no contour)
   const bottomEdge: [number, number, number][] = [
-    [-hL, 0, -hW],
-    [xContour, 0, -hW],
-    [xRight, slopeY, -hW],
-    [xRight, slopeY, hW],
-    [xContour, 0, hW],
-    [-hL, 0, hW],
-    [-hL, 0, -hW],
+    [-halfWidth, 0, -halfLength],
+    [halfWidth, 0, -halfLength],
+    [halfWidth, 0, halfLength],
+    [-halfWidth, 0, halfLength],
+    [-halfWidth, 0, -halfLength],
   ];
 
   return (
     <group>
       {/* Left wall (−X side, full rectangular) */}
-      <mesh position={[-hL + WALL_THICKNESS / 2, topY / 2, 0]}>
-        <boxGeometry args={[WALL_THICKNESS, topY, width - WALL_THICKNESS * 2]} />
+      <mesh position={[-halfWidth + WALL_THICKNESS / 2, topY / 2, 0]}>
+        <boxGeometry args={[WALL_THICKNESS, topY, length - WALL_THICKNESS * 2]} />
         <meshStandardMaterial {...wallMaterialProps} />
         <Edges color={WALL_EDGE_COLOR} threshold={15} />
       </mesh>
 
       {/* Right wall (+X side, contoured pentagon) */}
-      <mesh position={[hL - contourDepth, 0, -hW + WALL_THICKNESS]}>
+      <mesh position={[xContour, 0, -halfLength + WALL_THICKNESS]}>
         <primitive object={rightWallGeo} attach="geometry" />
         <meshStandardMaterial {...wallMaterialProps} />
         <Edges color={WALL_EDGE_COLOR} threshold={15} />
       </mesh>
 
       {/* Front wall (−Z, pentagon) */}
-      <mesh position={[0, 0, -hW]}>
+      <mesh position={[0, 0, -halfLength]}>
         <primitive object={frontWallGeo} attach="geometry" />
         <meshStandardMaterial {...wallMaterialProps} />
         <Edges color={WALL_EDGE_COLOR} threshold={15} />
       </mesh>
 
       {/* Back wall (+Z, pentagon — same shape, shifted) */}
-      <mesh position={[0, 0, hW - WALL_THICKNESS]}>
+      <mesh position={[0, 0, halfLength - WALL_THICKNESS]}>
         <primitive object={frontWallGeo} attach="geometry" />
         <meshStandardMaterial {...wallMaterialProps} />
         <Edges color={WALL_EDGE_COLOR} threshold={15} />
@@ -422,16 +393,16 @@ function ContouredWalls({
 
       {/* Vertical corner edges */}
       {/* Left-front */}
-      <Line points={[[-hL, 0, -hW], [-hL, topY, -hW]]} color={EDGE_LINE_COLOR} lineWidth={2} />
+      <Line points={[[-halfWidth, 0, -halfLength], [-halfWidth, topY, -halfLength]]} color={EDGE_LINE_COLOR} lineWidth={2} />
       {/* Left-back */}
-      <Line points={[[-hL, 0, hW], [-hL, topY, hW]]} color={EDGE_LINE_COLOR} lineWidth={2} />
-      {/* Right-front (full height from slopeY) */}
-      <Line points={[[xRight, slopeY, -hW], [xRight, topY, -hW]]} color={EDGE_LINE_COLOR} lineWidth={2} />
+      <Line points={[[-halfWidth, 0, halfLength], [-halfWidth, topY, halfLength]]} color={EDGE_LINE_COLOR} lineWidth={2} />
+      {/* Right-front (full height) */}
+      <Line points={[[halfWidth, 0, -halfLength], [halfWidth, topY, -halfLength]]} color={EDGE_LINE_COLOR} lineWidth={2} />
       {/* Right-back */}
-      <Line points={[[xRight, slopeY, hW], [xRight, topY, hW]]} color={EDGE_LINE_COLOR} lineWidth={2} />
+      <Line points={[[halfWidth, 0, halfLength], [halfWidth, topY, halfLength]]} color={EDGE_LINE_COLOR} lineWidth={2} />
       {/* Slope edges front & back */}
-      <Line points={[[xContour, 0, -hW], [xRight, slopeY, -hW]]} color={EDGE_LINE_COLOR} lineWidth={2} />
-      <Line points={[[xContour, 0, hW], [xRight, slopeY, hW]]} color={EDGE_LINE_COLOR} lineWidth={2} />
+      <Line points={[[xContour, 0, -halfLength], [xRight, slopeY, -halfLength]]} color={EDGE_LINE_COLOR} lineWidth={2} />
+      <Line points={[[xContour, 0, halfLength], [xRight, slopeY, halfLength]]} color={EDGE_LINE_COLOR} lineWidth={2} />
     </group>
   );
 }
