@@ -16,16 +16,6 @@
     "description": "Main deck pallet 318x224cm"
   },
   {
-    "id": "ake",
-    "name": "AKE",
-    "shape": "contoured",
-    "dimensions": { "length": 201, "width": 153, "height": 148 },
-    "contourStart": 64,
-    "contourDepth": 59,
-    "maxWeight": 1588,
-    "description": "Lower deck container LD3"
-  },
-  {
     "id": "pla",
     "name": "PLA",
     "dimensions": { "length": 318, "width": 153, "height": 163 },
