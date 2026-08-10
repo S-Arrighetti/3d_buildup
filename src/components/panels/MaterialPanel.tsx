@@ -52,15 +52,13 @@ export function MaterialPanel() {
     const skidW = mt.dimensions.width;  // along Z
     const skidH = mt.dimensions.height;
 
-    // How many skids fit along the pallet length (X axis)
     const colsAlongX = Math.max(1, Math.floor(palletL / skidL));
-    // Gap between skids along X: distribute remaining space evenly (edges + between)
+    const rows = Math.max(1, Math.min(autoRows, Math.floor(palletW / skidW)));
+
+    if (colsAlongX === 0 || rows === 0) return;
+
     const totalSkidX = colsAlongX * skidL;
     const gapX = (palletL - totalSkidX) / (colsAlongX + 1);
-
-    // Rows along Z (user-selectable count)
-    const rows = Math.min(autoRows, Math.floor(palletW / skidW));
-    // Gap between skids along Z: distribute remaining space evenly (edges + between)
     const totalSkidZ = rows * skidW;
     const gapZ = (palletW - totalSkidZ) / (rows + 1);
 
@@ -72,23 +70,15 @@ export function MaterialPanel() {
       }
     }
 
-    const placedMats = useMaterialStore.getState().placedMaterials;
-    const outstandingSupportHeights = [...placedMats, ...Array.from({ length: rows * colsAlongX }, () => null)]
-      .map((pm) => (pm ? materialTypes.find((m) => m.id === pm.materialTypeId) : null))
+    const existingSupportHeights = useMaterialStore
+      .getState()
+      .placedMaterials.map((pm) => materialTypes.find((m) => m.id === pm.materialTypeId))
       .filter((m): m is MaterialType => m !== undefined)
       .filter((m) => m.category === 'skid' || m.category === 'lumber' || m.category === 'spacer')
       .map((m) => m.dimensions.height);
 
-    const existingSupportHeights = placedMats
-      .map((pm) => materialTypes.find((m) => m.id === pm.materialTypeId))
-      .filter((m): m is MaterialType => m !== undefined)
-      .filter((m) => m.category === 'skid' || m.category === 'lumber' || m.category === 'spacer')
-      .map((m) => m.dimensions.height);
+    const maxSupportHeight = Math.max(skidH, ...existingSupportHeights, 0);
 
-    const supportHeights = [skidH, ...existingSupportHeights];
-    const maxSupportHeight = Math.max(...supportHeights);
-
-    // Lift all placed cargo to sit on top of the highest support height.
     useCargoStore.getState().items.forEach((cargo) => {
       if (!cargo.placed) return;
       useCargoStore.getState().updateCargoPosition(cargo.id, {
