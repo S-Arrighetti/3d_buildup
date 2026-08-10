@@ -22,3 +22,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local temp and debug files
+temp_*.txt
+patch_materialpanel.py
+debug_material.txt
+
+# Project preview / exported files
+3D_BuildUp_Model_*.html
+3D_BuildUp_Model_*.pptx
