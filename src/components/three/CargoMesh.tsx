@@ -17,7 +17,7 @@ export function CargoMeshGroup() {
   const items = useCargoStore((s) => s.items);
   return (
     <>
-      {items.filter((c) => c.placed).map((cargo) => (
+      {items.map((cargo) => (
         <SingleCargoMesh key={cargo.id} cargo={cargo} />
       ))}
     </>
@@ -139,6 +139,31 @@ function SingleCargoMesh({ cargo }: { cargo: CargoItem }) {
     };
 
     const onUp = () => {
+      const currentCargo = useCargoStore.getState().items.find((c) => c.id === cargo.id);
+      if (currentCargo && !currentCargo.placed && pallet) {
+        const halfWidth = pallet.dimensions.width / 2;
+        const halfLength = pallet.dimensions.length / 2;
+        const x = currentCargo.position.x;
+        const z = currentCargo.position.z;
+        const insidePallet =
+          x > -halfLength && x < halfLength && z > -halfWidth && z < halfWidth;
+        if (insidePallet) {
+          const updatedCargo = { ...currentCargo };
+          const stackY = findStackHeight(
+            { x: updatedCargo.position.x, y: updatedCargo.position.y, z: updatedCargo.position.z },
+            updatedCargo,
+            useCargoStore.getState().items,
+            useMaterialStore.getState().placedMaterials,
+            useMaterialStore.getState().materialTypes
+          );
+          useCargoStore.getState().updateCargoPosition(currentCargo.id, {
+            x: updatedCargo.position.x,
+            y: stackY + h / 2,
+            z: updatedCargo.position.z,
+          });
+          useCargoStore.getState().setCargoPlaced(currentCargo.id, true);
+        }
+      }
       setDragging(false);
       setDraggingState(false);
       useSceneStore.getState().enableOrbit();

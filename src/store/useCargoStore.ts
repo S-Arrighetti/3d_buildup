@@ -10,7 +10,13 @@ const CARGO_COLORS = [
 
 interface CargoStore {
   items: CargoItem[];
-  addCargo: (dimensions: Dimensions, weight: number, quantity: number, label?: string) => void;
+  addCargo: (
+    dimensions: Dimensions,
+    weight: number,
+    quantity: number,
+    label?: string,
+    position?: Position
+  ) => void;
   removeCargo: (id: string) => void;
   updateCargoPosition: (id: string, position: Position) => void;
   updateCargoRotation: (id: string, rotation: number) => void;
@@ -26,7 +32,7 @@ let colorIndex = 0;
 export const useCargoStore = create<CargoStore>((set, get) => ({
   items: [],
 
-  addCargo: (dimensions, weight, quantity, label) => {
+  addCargo: (dimensions, weight, quantity, label, position) => {
     const newItems: CargoItem[] = [];
     for (let i = 0; i < quantity; i++) {
       const color = CARGO_COLORS[colorIndex % CARGO_COLORS.length];
@@ -38,7 +44,7 @@ export const useCargoStore = create<CargoStore>((set, get) => ({
         weight,
         quantity: 1,
         color,
-        position: { x: 0, y: 0, z: 0 },
+        position: position ?? { x: 0, y: 0, z: 0 },
         rotation: 0,
         placed: false,
       });
