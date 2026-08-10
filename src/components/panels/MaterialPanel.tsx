@@ -71,6 +71,32 @@ export function MaterialPanel() {
         placeMaterial(mt.id, { x, y: skidH / 2, z });
       }
     }
+
+    const placedMats = useMaterialStore.getState().placedMaterials;
+    const outstandingSupportHeights = [...placedMats, ...Array.from({ length: rows * colsAlongX }, () => null)]
+      .map((pm) => (pm ? materialTypes.find((m) => m.id === pm.materialTypeId) : null))
+      .filter((m): m is MaterialType => m !== undefined)
+      .filter((m) => m.category === 'skid' || m.category === 'lumber' || m.category === 'spacer')
+      .map((m) => m.dimensions.height);
+
+    const existingSupportHeights = placedMats
+      .map((pm) => materialTypes.find((m) => m.id === pm.materialTypeId))
+      .filter((m): m is MaterialType => m !== undefined)
+      .filter((m) => m.category === 'skid' || m.category === 'lumber' || m.category === 'spacer')
+      .map((m) => m.dimensions.height);
+
+    const supportHeights = [skidH, ...existingSupportHeights];
+    const maxSupportHeight = Math.max(...supportHeights);
+
+    // Lift all placed cargo to sit on top of the highest support height.
+    useCargoStore.getState().items.forEach((cargo) => {
+      if (!cargo.placed) return;
+      useCargoStore.getState().updateCargoPosition(cargo.id, {
+        x: cargo.position.x,
+        y: maxSupportHeight + cargo.dimensions.height / 2,
+        z: cargo.position.z,
+      });
+    });
   };
 
   const handlePlace = (materialTypeId: string) => {

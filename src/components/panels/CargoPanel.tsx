@@ -1,18 +1,69 @@
 import { useState } from 'react';
 import { useCargoStore } from '../../store/useCargoStore';
+import { useMaterialStore } from '../../store/useMaterialStore';
 import { useSceneStore } from '../../store/useSceneStore';
 import { useHistoryStore } from '../../store/useHistoryStore';
+import { useActivePallet } from '../../store/usePalletStore';
+import { findStackHeight } from '../../utils/snapping';
+import type { CargoItem, Position } from '../../types';
+
+const STAGING_COLS = 3;
+const STAGING_CELL_SIZE = 120; // cm
+const STAGING_OFFSET_X = 60; // distance from pallet edge to first column
+const STAGING_OFFSET_Z = 0;
+
+function getStagingOrigin(palletLength: number, palletWidth: number) {
+  return {
+    x: palletLength / 2 + STAGING_OFFSET_X + STAGING_CELL_SIZE / 2,
+    z: -palletWidth / 2 + STAGING_OFFSET_Z + STAGING_CELL_SIZE / 2,
+  };
+}
+
+function findNextStagingPosition(
+  items: CargoItem[],
+  palletLength: number,
+  palletWidth: number,
+  cargoHeight: number
+): Position {
+  const origin = getStagingOrigin(palletLength, palletWidth);
+  const occupied = items
+    .filter((c) => !c.placed)
+    .map((c) => ({ x: c.position.x, z: c.position.z }));
+
+  for (let index = 0; index < 50; index++) {
+    const col = index % STAGING_COLS;
+    const row = Math.floor(index / STAGING_COLS);
+    const x = origin.x + col * STAGING_CELL_SIZE;
+    const z = origin.z + row * STAGING_CELL_SIZE;
+    const overlap = occupied.some(
+      (pos) => Math.abs(pos.x - x) < STAGING_CELL_SIZE * 0.75 && Math.abs(pos.z - z) < STAGING_CELL_SIZE * 0.75
+    );
+    if (!overlap) {
+      return { x, y: cargoHeight / 2, z };
+    }
+  }
+
+  // Fallback: place into last row and allow overlap if grid fills
+  return {
+    x: origin.x + ((50 - 1) % STAGING_COLS) * STAGING_CELL_SIZE,
+    y: cargoHeight / 2,
+    z: origin.z + Math.floor((50 - 1) / STAGING_COLS) * STAGING_CELL_SIZE,
+  };
+}
 
 export function CargoPanel() {
   const items = useCargoStore((s) => s.items);
   const addCargo = useCargoStore((s) => s.addCargo);
   const removeCargo = useCargoStore((s) => s.removeCargo);
   const setCargoPlaced = useCargoStore((s) => s.setCargoPlaced);
-  const updateCargoRotation = useCargoStore((s) => s.updateCargoRotation);
   const updateCargoPosition = useCargoStore((s) => s.updateCargoPosition);
+  const updateCargoRotation = useCargoStore((s) => s.updateCargoRotation);
   const clearAll = useCargoStore((s) => s.clearAll);
   const selectObject = useSceneStore((s) => s.selectObject);
   const selectedObjectId = useSceneStore((s) => s.selectedObjectId);
+  const activePallet = useActivePallet();
+  const placedMaterials = useMaterialStore((s) => s.placedMaterials);
+  const materialTypes = useMaterialStore((s) => s.materialTypes);
 
   const [form, setForm] = useState({
     label: '',
@@ -25,21 +76,34 @@ export function CargoPanel() {
 
   const handleAdd = () => {
     useHistoryStore.getState().pushSnapshot();
-    addCargo(
-      { length: form.length, width: form.width, height: form.height },
-      form.weight,
-      form.quantity,
-      form.label || undefined
-    );
+    for (let i = 0; i < form.quantity; i++) {
+      const position = activePallet
+        ? findNextStagingPosition(
+            useCargoStore.getState().items,
+            activePallet.dimensions.length,
+            activePallet.dimensions.width,
+            form.height
+          )
+        : { x: 0, y: form.height / 2, z: 0 };
+      addCargo(
+        { length: form.length, width: form.width, height: form.height },
+        form.weight,
+        1,
+        form.label || undefined,
+        position
+      );
+    }
     setForm({ ...form, label: '' });
   };
 
   const handlePlace = (id: string) => {
     const cargo = items.find((c) => c.id === id);
-    if (!cargo) return;
+    if (!cargo || !activePallet) return;
     if (!cargo.placed) {
       useHistoryStore.getState().pushSnapshot();
-      updateCargoPosition(id, { x: 0, y: cargo.dimensions.height / 2, z: 0 });
+      const rawPos = { x: 0, y: cargo.position.y, z: 0 };
+      const stackY = findStackHeight(rawPos, cargo, items, placedMaterials, materialTypes);
+      updateCargoPosition(id, { x: 0, y: stackY + cargo.dimensions.height / 2, z: 0 });
       setCargoPlaced(id, true);
     }
   };
