@@ -8,7 +8,7 @@ import { useSceneStore } from '../../store/useSceneStore';
 import { useHistoryStore } from '../../store/useHistoryStore';
 import { useViewId, useViewCargoItems, useViewPlacedMaterials } from './ViewContext';
 import { findMaterialStackHeight } from '../../utils/snapping';
-import { viewAtPoint, dropMaterialIntoView } from '../../utils/viewDrop';
+import { viewAtPoint, dropMaterialIntoView, previewMaterialDrop } from '../../utils/viewDrop';
 import type { PlacedMaterial, MaterialType } from '../../types';
 
 const SCALE = 0.01;
@@ -123,7 +123,16 @@ function SingleMaterialMesh({
 
       // Highlight only a *different* pane, so the ring means "drop here to move"
       const over = viewAtPoint(e.clientX, e.clientY);
-      useSceneStore.getState().setDragOverView(over === viewId ? null : over);
+      const crossView = over !== null && over !== viewId;
+      useSceneStore.getState().setDragOverView(crossView ? over : null);
+
+      if (crossView) {
+        // Show where it would land in the other pane, and leave this pane's copy
+        // where it is until the drop actually happens
+        previewMaterialDrop(placed.id, over, e.clientX, e.clientY);
+        return;
+      }
+      useSceneStore.getState().setDropPreview(null);
 
       const worldPos = getWorldPosFromMouse(e.clientX, e.clientY);
       if (!worldPos) return;
@@ -150,6 +159,7 @@ function SingleMaterialMesh({
 
     const onUp = (e: PointerEvent) => {
       useSceneStore.getState().setDragOverView(null);
+      useSceneStore.getState().setDropPreview(null);
 
       // Released over a different pane → hand the material over to that view
       const dropViewId = didDrag.current ? viewAtPoint(e.clientX, e.clientY) : null;

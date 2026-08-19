@@ -72,21 +72,31 @@ function isInsidePallet(pos: Position, pallet: PalletType): boolean {
   );
 }
 
+/** Where a dragged item would land in a target pane, without moving it yet */
+interface DropPlan {
+  position: Position;
+  /** Cargo only: whether it lands on the pallet and counts as placed */
+  valid: boolean;
+}
+
 /**
- * Move a cargo item into another pane, landing it where the pointer was released.
- * Stacking and snapping are resolved against the target pane's own contents.
+ * Resolve where a cargo item would come to rest in another pane. Stacking and
+ * snapping are computed against the target pane's own contents, so the preview
+ * and the eventual drop always agree.
  */
-export function dropCargoIntoView(
+export function planCargoDrop(
   cargoId: string,
   targetViewId: number,
   clientX: number,
   clientY: number
-): void {
+): DropPlan | null {
   const cargo = useCargoStore.getState().items.find((c) => c.id === cargoId);
-  if (!cargo) return;
+  if (!cargo) return null;
 
   const ground = groundPosInView(targetViewId, clientX, clientY);
-  const pos: Position = { x: ground?.x ?? 0, y: cargo.position.y, z: ground?.z ?? 0 };
+  if (!ground) return null;
+
+  const pos: Position = { x: ground.x, y: cargo.position.y, z: ground.z };
 
   const targetCargo = cargoInView(useCargoStore.getState().items, targetViewId);
   const targetMats = materialsInView(
@@ -99,14 +109,120 @@ export function dropCargoIntoView(
   const { h } = getEffectiveDimensions(cargo.dimensions, cargo.rotation);
   pos.y = findStackHeight(pos, cargo, targetCargo, targetMats, materialTypes) + h / 2;
 
-  const finalPos = pallet
+  const position = pallet
     ? snapPosition(pos, cargo, targetCargo, pallet.dimensions)
     : pos;
 
+  return { position, valid: pallet ? isInsidePallet(position, pallet) : false };
+}
+
+/** Resolve where a placed material would come to rest in another pane. */
+export function planMaterialDrop(
+  materialId: string,
+  targetViewId: number,
+  clientX: number,
+  clientY: number
+): DropPlan | null {
+  const material = useMaterialStore
+    .getState()
+    .placedMaterials.find((m) => m.id === materialId);
+  if (!material) return null;
+
+  const matType = useMaterialStore.getState().getMaterialType(material.materialTypeId);
+  if (!matType) return null;
+
+  const ground = groundPosInView(targetViewId, clientX, clientY);
+  if (!ground) return null;
+
+  const pos: Position = { x: ground.x, y: 0, z: ground.z };
+
+  const stackH = findMaterialStackHeight(
+    pos,
+    material.id,
+    matType,
+    cargoInView(useCargoStore.getState().items, targetViewId),
+    materialsInView(useMaterialStore.getState().placedMaterials, targetViewId),
+    useMaterialStore.getState().materialTypes
+  );
+
+  return {
+    position: { x: pos.x, y: stackH + matType.dimensions.height / 2, z: pos.z },
+    valid: true,
+  };
+}
+
+/** Show a ghost of where the dragged cargo would land in the pane under the pointer */
+export function previewCargoDrop(
+  cargoId: string,
+  targetViewId: number,
+  clientX: number,
+  clientY: number
+): void {
+  const cargo = useCargoStore.getState().items.find((c) => c.id === cargoId);
+  const plan = planCargoDrop(cargoId, targetViewId, clientX, clientY);
+  if (!cargo || !plan) {
+    useSceneStore.getState().setDropPreview(null);
+    return;
+  }
+
+  useSceneStore.getState().setDropPreview({
+    viewId: targetViewId,
+    position: plan.position,
+    dimensions: cargo.dimensions,
+    rotation: cargo.rotation,
+    color: cargo.color,
+    label: cargo.label,
+    valid: plan.valid,
+  });
+}
+
+/** Show a ghost of where the dragged material would land in the pane under the pointer */
+export function previewMaterialDrop(
+  materialId: string,
+  targetViewId: number,
+  clientX: number,
+  clientY: number
+): void {
+  const material = useMaterialStore
+    .getState()
+    .placedMaterials.find((m) => m.id === materialId);
+  const matType = material
+    ? useMaterialStore.getState().getMaterialType(material.materialTypeId)
+    : undefined;
+  const plan = planMaterialDrop(materialId, targetViewId, clientX, clientY);
+  if (!material || !matType || !plan) {
+    useSceneStore.getState().setDropPreview(null);
+    return;
+  }
+
+  useSceneStore.getState().setDropPreview({
+    viewId: targetViewId,
+    position: plan.position,
+    dimensions: matType.dimensions,
+    rotation: material.rotation,
+    color: matType.color,
+    label: matType.name,
+    valid: true,
+  });
+}
+
+/**
+ * Move a cargo item into another pane, landing it where the pointer was released
+ * — the same spot the preview ghost was showing.
+ */
+export function dropCargoIntoView(
+  cargoId: string,
+  targetViewId: number,
+  clientX: number,
+  clientY: number
+): void {
+  const plan = planCargoDrop(cargoId, targetViewId, clientX, clientY);
+  if (!plan) return;
+
   useCargoStore.getState().updateCargo(cargoId, {
     viewId: targetViewId,
-    position: finalPos,
-    placed: pallet ? isInsidePallet(finalPos, pallet) : false,
+    position: plan.position,
+    placed: plan.valid,
   });
 
   useViewStore.getState().setActiveView(targetViewId);
@@ -119,36 +235,12 @@ export function dropMaterialIntoView(
   clientX: number,
   clientY: number
 ): void {
-  const material = useMaterialStore
-    .getState()
-    .placedMaterials.find((m) => m.id === materialId);
-  if (!material) return;
-
-  const matType = useMaterialStore.getState().getMaterialType(material.materialTypeId);
-  if (!matType) return;
-
-  const ground = groundPosInView(targetViewId, clientX, clientY);
-  const pos: Position = { x: ground?.x ?? 0, y: 0, z: ground?.z ?? 0 };
-
-  const targetCargo = cargoInView(useCargoStore.getState().items, targetViewId);
-  const targetMats = materialsInView(
-    useMaterialStore.getState().placedMaterials,
-    targetViewId
-  );
-  const materialTypes = useMaterialStore.getState().materialTypes;
-
-  const stackH = findMaterialStackHeight(
-    pos,
-    material.id,
-    matType,
-    targetCargo,
-    targetMats,
-    materialTypes
-  );
+  const plan = planMaterialDrop(materialId, targetViewId, clientX, clientY);
+  if (!plan) return;
 
   useMaterialStore.getState().updateMaterial(materialId, {
     viewId: targetViewId,
-    position: { x: pos.x, y: stackH + matType.dimensions.height / 2, z: pos.z },
+    position: plan.position,
   });
 
   useViewStore.getState().setActiveView(targetViewId);
