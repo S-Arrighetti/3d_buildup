@@ -50,7 +50,7 @@ export function BeltRouter() {
 
   // Handle edge zone click - start or finish belt
   const handleEdgeClick = useCallback(
-    (e: ThreeEvent<PointerEvent>, side: string) => {
+    (e: ThreeEvent<PointerEvent>) => {
       e.stopPropagation();
       if (!pallet) return;
 
@@ -129,7 +129,7 @@ export function BeltRouter() {
         <mesh
           key={zone.side}
           position={zone.pos}
-          onPointerDown={(e) => handleEdgeClick(e, zone.side)}
+          onPointerDown={handleEdgeClick}
         >
           <boxGeometry args={zone.size} />
           <meshBasicMaterial

@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { usePalletStore } from '../../store/usePalletStore';
 import { useContourStore } from '../../store/useContourStore';
 import { useMaterialStore } from '../../store/useMaterialStore';
-import type { CompanyPallet, ContourProfile, ContourPoint, MaterialType, MaterialCategory } from '../../types';
+import type { ContourProfile, ContourPoint, MaterialType, MaterialCategory } from '../../types';
 
 type DBTab = 'companies' | 'contours' | 'materials';
 

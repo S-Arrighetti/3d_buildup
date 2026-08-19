@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { usePalletStore, useActivePallet, useActiveViewSelection } from '../../store/usePalletStore';
 import { useViewStore } from '../../store/useViewStore';
 
@@ -20,17 +20,19 @@ export function PalletPanel() {
   const selectCompany = usePalletStore((s) => s.selectCompany);
   const updatePalletType = usePalletStore((s) => s.updatePalletType);
 
-  const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState<EditForm>({
     length: 0, width: 0, height: 0, innerLength: 0, innerWidth: 0, maxWeight: 0,
   });
 
   const activePallet = useActivePallet();
 
-  // When selected pallet or active view changes, close edit form
-  useEffect(() => {
-    setEditing(false);
-  }, [selectedPalletId, activeViewId]);
+  // The form belongs to one pallet in one view. Remembering which, instead of
+  // closing it from an effect, means switching target closes it during the same
+  // render rather than one render later.
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const editKey = `${activeViewId}:${selectedPalletId ?? ''}`;
+  const editing = editingKey === editKey;
+  const setEditing = (open: boolean) => setEditingKey(open ? editKey : null);
 
   const startEdit = () => {
     if (!activePallet) return;

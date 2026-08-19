@@ -1,73 +1,62 @@
-# React + TypeScript + Vite
+# 3D Build-Up
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Plan air cargo pallet build-ups in 3D. Pick a pallet, stack cargo and dunnage on
+it, and check the load against contour and weight limits before anyone touches a
+real box.
 
-Currently, two official plugins are available:
+**Live: https://s-arrighetti.github.io/3d_buildup/**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Everything runs in the browser. There is no server and no account — your work is
+saved in the browser you use it from.
 
-## React Compiler
+## What it does
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Pallets** — PMC, PAG and PLA out of the box, with per-company dimension
+  overrides. Add your own in the DB tab.
+- **Cargo** — add boxes by dimension and weight, drag them into place. Snapping
+  and stacking are automatic; overhang and overweight are flagged.
+- **Materials** — skids, lumber, spacers, shelves, belts and nets, with an
+  auto-layout that spreads skids evenly across the pallet.
+- **Contour check** — overlay an aircraft contour (B757 main deck, A320 and so
+  on) to see what the load fouls.
+- **Split views** — start on one pallet and split out up to four. Each pane is
+  its own build-up, and dragging a box from one pane to another moves it there.
 
-## Expanding the ESLint configuration
+## Controls
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+| Action | How |
+|---|---|
+| Orbit / zoom | Drag / scroll in a pane |
+| Select | Click a box |
+| Move | Drag a box, or arrow keys (Shift for 5 cm steps) |
+| Move to another pane | Drag it over that pane and release |
+| Rotate | Toolbar `±5°` / `90°` |
+| Delete | `Delete` or the toolbar button |
+| Undo | `Ctrl+Z` |
+| Add / remove a pane | Toolbar `+` / `−`, or the `×` on a pane |
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Saving
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+Your pallets, cargo, materials and layout are written to the browser's
+localStorage as you work, so a refresh or a closed tab won't lose them.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+That also means the data lives in **one browser on one machine** — it does not
+follow you to another device, and clearing site data erases it. There is no
+export yet.
+
+## Development
+
+```bash
+npm install
+npm run dev      # dev server
+npm run build    # typecheck + production build
+npm run lint
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+React 19 + TypeScript + Vite, three.js via @react-three/fiber, Zustand for
+state, Tailwind for styling. Pushing to `main` builds and deploys to GitHub
+Pages via `.github/workflows/deploy.yml`.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Default pallets, materials and contours live in `src/data/*.json`. Changing them
+usually means bumping the matching store's persist `version` in `src/store/`, or
+existing users keep the old copy.

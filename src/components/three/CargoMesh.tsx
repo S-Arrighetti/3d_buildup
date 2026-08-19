@@ -42,8 +42,6 @@ function SingleCargoMesh({ cargo }: { cargo: CargoItem }) {
   const selectedObjectId = useSceneStore((s) => s.selectedObjectId);
   const selectObject = useSceneStore((s) => s.selectObject);
   const setDraggingState = useSceneStore((s) => s.setDragging);
-  const disableOrbit = useSceneStore((s) => s.disableOrbit);
-  const enableOrbit = useSceneStore((s) => s.enableOrbit);
 
   const viewId = useViewId();
   const updateCargoPosition = useCargoStore((s) => s.updateCargoPosition);
