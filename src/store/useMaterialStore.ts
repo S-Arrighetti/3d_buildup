@@ -26,6 +26,15 @@ interface MaterialStore {
   getMaterialType: (id: string) => MaterialType | undefined;
 }
 
+/**
+ * CK SKID was added by hand and overlaps Skid (Small) 100x100x15. It only ever
+ * lived in browser storage, so it is retired here rather than in materials.json.
+ */
+function isRetiredCkSkid(m: MaterialType): boolean {
+  const normalized = (s: string) => s.replace(/[\s_-]/g, '').toLowerCase();
+  return normalized(m.name) === 'ckskid' || normalized(m.id) === 'ckskid';
+}
+
 /** Filter helper: materials belonging to a view (legacy items without viewId → view 0) */
 export function materialsInView(mats: PlacedMaterial[], viewId: number): PlacedMaterial[] {
   return mats.filter((m) => (m.viewId ?? 0) === viewId);
@@ -109,16 +118,19 @@ export const useMaterialStore = create<MaterialStore>()(
     }),
     {
       name: 'buildup-material-store',
-      version: 2,
+      version: 3,
       partialize: (state) => ({ materialTypes: state.materialTypes }),
       migrate: (_persisted) => {
         const state = _persisted as Pick<MaterialStore, 'materialTypes'>;
         const defaults = defaultMaterials as MaterialType[];
+        // v→3: the hand-added CK SKID duplicated Skid (Small) 100x100x15, so
+        // retire it wherever it was saved
+        const kept = state.materialTypes.filter((m) => !isRetiredCkSkid(m));
         // Add any new default materials that aren't in the stored list
-        const storedIds = new Set(state.materialTypes.map((m) => m.id));
+        const storedIds = new Set(kept.map((m) => m.id));
         const newTypes = defaults.filter((d) => !storedIds.has(d.id));
         // Merge meshShape from defaults into existing types
-        const merged = state.materialTypes.map((m) => {
+        const merged = kept.map((m) => {
           const def = defaults.find((d) => d.id === m.id);
           return def?.meshShape ? { ...m, meshShape: def.meshShape } : m;
         });
