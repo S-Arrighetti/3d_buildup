@@ -3,7 +3,8 @@ import { useCargoStore } from '../../store/useCargoStore';
 import { useMaterialStore } from '../../store/useMaterialStore';
 import { useSceneStore } from '../../store/useSceneStore';
 import { useHistoryStore } from '../../store/useHistoryStore';
-import { useViewStore, VIEW_IDS } from '../../store/useViewStore';
+import { useViewStore, MAX_VIEWS, visibleViewIds } from '../../store/useViewStore';
+import { deleteView, viewContentCount } from '../../store/viewActions';
 
 export function Toolbar() {
   const showContour = useContourStore((s) => s.showContour);
@@ -29,8 +30,21 @@ export function Toolbar() {
 
   const activeViewId = useViewStore((s) => s.activeViewId);
   const setActiveView = useViewStore((s) => s.setActiveView);
-  const layout = useViewStore((s) => s.layout);
-  const setLayout = useViewStore((s) => s.setLayout);
+  const viewCount = useViewStore((s) => s.viewCount);
+  const addView = useViewStore((s) => s.addView);
+
+  const handleRemoveView = () => {
+    const count = viewContentCount(activeViewId);
+    if (
+      count > 0 &&
+      !window.confirm(
+        `View ${activeViewId + 1} still holds ${count} item(s). Remove the view and discard them?`
+      )
+    ) {
+      return;
+    }
+    deleteView(activeViewId);
+  };
 
   const handleDelete = () => {
     if (!selectedObjectId) return;
@@ -70,9 +84,9 @@ export function Toolbar() {
     <div className="h-10 bg-gray-800 border-b border-gray-700 flex items-center px-3 gap-2">
       <span className="text-sm font-bold text-white mr-4">3D Build-Up</span>
 
-      {/* View selector (4-screen split, single active target) */}
+      {/* View selector — panes are split out on demand, one active target */}
       <div className="flex items-center gap-0.5">
-        {VIEW_IDS.map((id) => (
+        {visibleViewIds(viewCount).map((id) => (
           <button
             key={id}
             onClick={() => setActiveView(id)}
@@ -86,16 +100,24 @@ export function Toolbar() {
             {id + 1}
           </button>
         ))}
-      </div>
 
-      {/* Layout toggle: quad split / single view */}
-      <button
-        onClick={() => setLayout(layout === 'quad' ? 'single' : 'quad')}
-        className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded"
-        title={layout === 'quad' ? 'Switch to single view' : 'Switch to 4-view split'}
-      >
-        {layout === 'quad' ? '⊞ 4-View' : '▣ 1-View'}
-      </button>
+        <button
+          onClick={() => addView()}
+          disabled={viewCount >= MAX_VIEWS}
+          className="text-xs w-6 py-1 ml-1 rounded bg-gray-700 text-gray-300 hover:bg-blue-600 hover:text-white disabled:opacity-30 disabled:hover:bg-gray-700 disabled:hover:text-gray-300 transition-colors"
+          title={viewCount >= MAX_VIEWS ? `Maximum ${MAX_VIEWS} views` : 'Split out another view'}
+        >
+          +
+        </button>
+        <button
+          onClick={handleRemoveView}
+          disabled={viewCount <= 1}
+          className="text-xs w-6 py-1 rounded bg-gray-700 text-gray-300 hover:bg-red-700 hover:text-white disabled:opacity-30 disabled:hover:bg-gray-700 disabled:hover:text-gray-300 transition-colors"
+          title={viewCount <= 1 ? 'Only one view left' : `Remove view ${activeViewId + 1}`}
+        >
+          −
+        </button>
+      </div>
 
       <div className="h-5 w-px bg-gray-600" />
 
