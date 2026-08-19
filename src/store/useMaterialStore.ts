@@ -101,7 +101,7 @@ export const useMaterialStore = create<MaterialStore>()(
     }),
     {
       name: 'buildup-material-store',
-      version: 1,
+      version: 2,
       partialize: (state) => ({ materialTypes: state.materialTypes }),
       migrate: (_persisted) => {
         const state = _persisted as Pick<MaterialStore, 'materialTypes'>;
