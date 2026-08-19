@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
 import type { CargoItem, Dimensions, Position } from '../types';
+import { useViewStore } from './useViewStore';
 
 const CARGO_COLORS = [
   '#4FC3F7', '#81C784', '#FFB74D', '#E57373',
@@ -22,9 +23,15 @@ interface CargoStore {
   updateCargoRotation: (id: string, rotation: number) => void;
   setCargoPlaced: (id: string, placed: boolean) => void;
   updateCargo: (id: string, updates: Partial<CargoItem>) => void;
-  clearAll: () => void;
-  getTotalWeight: () => number;
-  getTotalVolume: () => number;
+  /** Clear cargo — only the given view's items when viewId is provided */
+  clearAll: (viewId?: number) => void;
+  getTotalWeight: (viewId?: number) => number;
+  getTotalVolume: (viewId?: number) => number;
+}
+
+/** Filter helper: cargo belonging to a view (legacy items without viewId → view 0) */
+export function cargoInView(items: CargoItem[], viewId: number): CargoItem[] {
+  return items.filter((c) => (c.viewId ?? 0) === viewId);
 }
 
 let colorIndex = 0;
@@ -33,6 +40,7 @@ export const useCargoStore = create<CargoStore>((set, get) => ({
   items: [],
 
   addCargo: (dimensions, weight, quantity, label, position) => {
+    const viewId = useViewStore.getState().activeViewId;
     const newItems: CargoItem[] = [];
     for (let i = 0; i < quantity; i++) {
       const color = CARGO_COLORS[colorIndex % CARGO_COLORS.length];
@@ -47,6 +55,7 @@ export const useCargoStore = create<CargoStore>((set, get) => ({
         position: position ?? { x: 0, y: 0, z: 0 },
         rotation: 0,
         placed: false,
+        viewId,
       });
     }
     set((s) => ({ items: [...s.items, ...newItems] }));
@@ -75,16 +84,27 @@ export const useCargoStore = create<CargoStore>((set, get) => ({
       items: s.items.map((c) => (c.id === id ? { ...c, ...updates } : c)),
     })),
 
-  clearAll: () => {
-    colorIndex = 0;
-    set({ items: [] });
+  clearAll: (viewId) => {
+    if (viewId === undefined) {
+      colorIndex = 0;
+      set({ items: [] });
+      return;
+    }
+    set((s) => {
+      const remaining = s.items.filter((c) => (c.viewId ?? 0) !== viewId);
+      if (remaining.length === 0) colorIndex = 0;
+      return { items: remaining };
+    });
   },
 
-  getTotalWeight: () => get().items.filter((c) => c.placed).reduce((sum, c) => sum + c.weight, 0),
-
-  getTotalVolume: () =>
+  getTotalWeight: (viewId) =>
     get()
-      .items.filter((c) => c.placed)
+      .items.filter((c) => c.placed && (viewId === undefined || (c.viewId ?? 0) === viewId))
+      .reduce((sum, c) => sum + c.weight, 0),
+
+  getTotalVolume: (viewId) =>
+    get()
+      .items.filter((c) => c.placed && (viewId === undefined || (c.viewId ?? 0) === viewId))
       .reduce(
         (sum, c) =>
           sum + (c.dimensions.length * c.dimensions.width * c.dimensions.height) / 1_000_000,

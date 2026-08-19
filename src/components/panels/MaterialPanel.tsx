@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { useMaterialStore } from '../../store/useMaterialStore';
-import { useCargoStore } from '../../store/useCargoStore';
+import { useMemo, useState } from 'react';
+import { useMaterialStore, materialsInView } from '../../store/useMaterialStore';
+import { useCargoStore, cargoInView } from '../../store/useCargoStore';
 import { useSceneStore } from '../../store/useSceneStore';
 import { useHistoryStore } from '../../store/useHistoryStore';
 import { useActivePallet } from '../../store/usePalletStore';
+import { useViewStore } from '../../store/useViewStore';
 import type { MaterialCategory, MaterialType } from '../../types';
 
 const CATEGORY_LABELS: Record<MaterialCategory, string> = {
@@ -19,14 +20,23 @@ const CATEGORY_LABELS: Record<MaterialCategory, string> = {
 const CATEGORY_ORDER: MaterialCategory[] = ['skid', 'lumber', 'spacer', 'shelf', 'belt', 'net', 'other'];
 
 export function MaterialPanel() {
+  const activeViewId = useViewStore((s) => s.activeViewId);
   const materialTypes = useMaterialStore((s) => s.materialTypes);
-  const placedMaterials = useMaterialStore((s) => s.placedMaterials);
+  const allPlacedMaterials = useMaterialStore((s) => s.placedMaterials);
+  const placedMaterials = useMemo(
+    () => materialsInView(allPlacedMaterials, activeViewId),
+    [allPlacedMaterials, activeViewId]
+  );
   const placeMaterial = useMaterialStore((s) => s.placeMaterial);
   const removePlacedMaterial = useMaterialStore((s) => s.removePlacedMaterial);
   const attachBeltToCargo = useMaterialStore((s) => s.attachBeltToCargo);
   const clearAllPlaced = useMaterialStore((s) => s.clearAllPlaced);
 
-  const cargoItems = useCargoStore((s) => s.items);
+  const allCargoItems = useCargoStore((s) => s.items);
+  const cargoItems = useMemo(
+    () => cargoInView(allCargoItems, activeViewId),
+    [allCargoItems, activeViewId]
+  );
   const selectObject = useSceneStore((s) => s.selectObject);
   const selectedObjectId = useSceneStore((s) => s.selectedObjectId);
 
@@ -70,16 +80,18 @@ export function MaterialPanel() {
       }
     }
 
-    const existingSupportHeights = useMaterialStore
-      .getState()
-      .placedMaterials.map((pm) => materialTypes.find((m) => m.id === pm.materialTypeId))
+    const existingSupportHeights = materialsInView(
+      useMaterialStore.getState().placedMaterials,
+      activeViewId
+    )
+      .map((pm) => materialTypes.find((m) => m.id === pm.materialTypeId))
       .filter((m): m is MaterialType => m !== undefined)
       .filter((m) => m.category === 'skid' || m.category === 'lumber' || m.category === 'spacer')
       .map((m) => m.dimensions.height);
 
     const maxSupportHeight = Math.max(skidH, ...existingSupportHeights, 0);
 
-    useCargoStore.getState().items.forEach((cargo) => {
+    cargoInView(useCargoStore.getState().items, activeViewId).forEach((cargo) => {
       if (!cargo.placed) return;
       useCargoStore.getState().updateCargoPosition(cargo.id, {
         x: cargo.position.x,
@@ -127,6 +139,7 @@ export function MaterialPanel() {
     <div className="space-y-3">
       <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
         Materials
+        <span className="ml-2 text-blue-400 normal-case">View {activeViewId + 1}</span>
       </h3>
 
       {/* Category tabs */}
@@ -303,10 +316,10 @@ export function MaterialPanel() {
             })}
           </div>
           <button
-            onClick={() => { useHistoryStore.getState().pushSnapshot(); clearAllPlaced(); }}
+            onClick={() => { useHistoryStore.getState().pushSnapshot(); clearAllPlaced(activeViewId); }}
             className="w-full mt-1 bg-red-800/60 hover:bg-red-700 text-red-200 text-xs py-1 rounded"
           >
-            Clear All Materials
+            Clear View Materials
           </button>
         </div>
       )}

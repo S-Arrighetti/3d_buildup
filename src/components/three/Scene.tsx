@@ -10,11 +10,14 @@ import { HeightRuler } from './HeightRuler';
 import { BeltSimulation } from './BeltSimulation';
 import { BeltRouter } from './BeltRouter';
 import { CursorGuide } from './CursorGuide';
+import { ViewIdContext } from './ViewContext';
 import { useSceneStore } from '../../store/useSceneStore';
+import { useViewStore, VIEW_IDS } from '../../store/useViewStore';
+import { useViewPallet } from '../../store/usePalletStore';
 
 const SCALE = 0.01;
 
-function SceneContent() {
+function SceneContent({ viewId, active }: { viewId: number; active: boolean }) {
   const clearSelection = useSceneStore((s) => s.clearSelection);
   const isDragging = useSceneStore((s) => s.isDragging);
   const orbitLocked = useSceneStore((s) => s.rotationLocked);
@@ -25,12 +28,13 @@ function SceneContent() {
 
   const invalidate = useThree((s) => s.invalidate);
 
-  // Register OrbitControls ref in store for direct manipulation
+  // Register this view's OrbitControls ref in store for direct manipulation
   useEffect(() => {
     if (controlsRef.current) {
-      setOrbitControlsRef(controlsRef.current);
+      setOrbitControlsRef(viewId, controlsRef.current);
     }
-  }, [setOrbitControlsRef]);
+    return () => setOrbitControlsRef(viewId, null);
+  }, [setOrbitControlsRef, viewId]);
 
   // Invalidate frame when relevant state changes (demand mode)
   useEffect(() => {
@@ -59,8 +63,9 @@ function SceneContent() {
         <OverhangIndicator />
         <HeightRuler />
         <BeltSimulation />
-        <BeltRouter />
-        <CursorGuide />
+        {/* Interactive helpers only in the active view */}
+        {active && <BeltRouter />}
+        {active && <CursorGuide />}
       </group>
 
       <Grid
@@ -88,7 +93,7 @@ function SceneContent() {
         maxPolarAngle={Math.PI / 2.05}
       />
 
-      <GizmoHelper alignment="bottom-right" margin={[80, 80]}>
+      <GizmoHelper alignment="bottom-right" margin={[60, 60]}>
         <GizmoViewport />
       </GizmoHelper>
 
@@ -97,17 +102,61 @@ function SceneContent() {
   );
 }
 
-export function Scene() {
+function ViewPane({ viewId, active }: { viewId: number; active: boolean }) {
   const clearSelection = useSceneStore((s) => s.clearSelection);
+  const setActiveView = useViewStore((s) => s.setActiveView);
+  const pallet = useViewPallet(viewId);
 
   return (
-    <Canvas
-      camera={{ position: [5, 4, 5], fov: 50 }}
-      onPointerMissed={clearSelection}
-      shadows
-      frameloop="demand"
+    <div
+      className={`relative h-full w-full min-h-0 min-w-0 overflow-hidden rounded transition-shadow ${
+        active
+          ? 'ring-2 ring-blue-500'
+          : 'ring-1 ring-gray-700 opacity-95 hover:opacity-100'
+      }`}
+      onPointerDown={() => setActiveView(viewId)}
     >
-      <SceneContent />
-    </Canvas>
+      {/* View label */}
+      <div
+        className={`absolute top-1.5 left-2 z-10 pointer-events-none text-xs font-medium px-1.5 py-0.5 rounded ${
+          active ? 'bg-blue-600/90 text-white' : 'bg-gray-800/80 text-gray-400'
+        }`}
+      >
+        {viewId + 1} · {pallet?.name ?? '—'}
+        {active && ' ●'}
+      </div>
+
+      <Canvas
+        camera={{ position: [5, 4, 5], fov: 50 }}
+        onPointerMissed={clearSelection}
+        shadows
+        frameloop="demand"
+      >
+        <ViewIdContext.Provider value={viewId}>
+          <SceneContent viewId={viewId} active={active} />
+        </ViewIdContext.Provider>
+      </Canvas>
+    </div>
+  );
+}
+
+export function Scene() {
+  const layout = useViewStore((s) => s.layout);
+  const activeViewId = useViewStore((s) => s.activeViewId);
+
+  if (layout === 'single') {
+    return (
+      <div className="h-full w-full bg-gray-950 p-1">
+        <ViewPane key={activeViewId} viewId={activeViewId} active />
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-2 grid-rows-2 gap-1 h-full w-full bg-gray-950 p-1">
+      {VIEW_IDS.map((id) => (
+        <ViewPane key={id} viewId={id} active={id === activeViewId} />
+      ))}
+    </div>
   );
 }

@@ -4,13 +4,31 @@ import { persist } from 'zustand/middleware';
 import type { PalletType, CompanyPallet } from '../types';
 import defaultPallets from '../data/pallets.json';
 import defaultCompanies from '../data/companies.json';
+import { useViewStore, VIEW_IDS } from './useViewStore';
+
+/** Per-view pallet selection */
+export interface ViewPalletSelection {
+  palletId: string | null;
+  company: string | null;
+}
+
+const EMPTY_SELECTION: ViewPalletSelection = { palletId: null, company: null };
+
+function defaultViewSelections(): Record<number, ViewPalletSelection> {
+  const sel: Record<number, ViewPalletSelection> = {};
+  for (const id of VIEW_IDS) {
+    sel[id] = { palletId: 'pmc', company: null };
+  }
+  return sel;
+}
 
 interface PalletStore {
   palletTypes: PalletType[];
   companies: CompanyPallet[];
-  selectedPalletId: string | null;
-  selectedCompany: string | null;
+  /** Pallet selection per split view (keyed by viewId) */
+  viewSelections: Record<number, ViewPalletSelection>;
 
+  /** Select pallet/company for the currently active view */
   selectPallet: (id: string) => void;
   selectCompany: (name: string | null) => void;
 
@@ -27,11 +45,24 @@ export const usePalletStore = create<PalletStore>()(
     (set) => ({
       palletTypes: defaultPallets as PalletType[],
       companies: defaultCompanies as CompanyPallet[],
-      selectedPalletId: 'pmc',
-      selectedCompany: null,
+      viewSelections: defaultViewSelections(),
 
-      selectPallet: (id) => set({ selectedPalletId: id }),
-      selectCompany: (name) => set({ selectedCompany: name }),
+      selectPallet: (id) =>
+        set((s) => {
+          const v = useViewStore.getState().activeViewId;
+          const prev = s.viewSelections[v] ?? EMPTY_SELECTION;
+          return {
+            viewSelections: { ...s.viewSelections, [v]: { ...prev, palletId: id } },
+          };
+        }),
+      selectCompany: (name) =>
+        set((s) => {
+          const v = useViewStore.getState().activeViewId;
+          const prev = s.viewSelections[v] ?? EMPTY_SELECTION;
+          return {
+            viewSelections: { ...s.viewSelections, [v]: { ...prev, company: name } },
+          };
+        }),
 
       addPalletType: (pallet) =>
         set((s) => ({ palletTypes: [...s.palletTypes, pallet] })),
@@ -61,45 +92,66 @@ export const usePalletStore = create<PalletStore>()(
     }),
     {
       name: 'buildup-pallet-store',
-      version: 10,
+      version: 11,
       migrate: () => {
-        // v→10: reset default pallet list after pallet definition updates
+        // v→11: per-view pallet selections (4-screen split layout)
         return {
           palletTypes: defaultPallets as PalletType[],
           companies: defaultCompanies as CompanyPallet[],
-          selectedPalletId: 'pmc',
-          selectedCompany: null,
+          viewSelections: defaultViewSelections(),
         };
       },
     }
   )
 );
 
-/** Reactive hook that returns the resolved active pallet */
-export function useActivePallet(): PalletType | null {
-  const palletTypes = usePalletStore((s) => s.palletTypes);
-  const selectedPalletId = usePalletStore((s) => s.selectedPalletId);
-  const selectedCompany = usePalletStore((s) => s.selectedCompany);
-  const companies = usePalletStore((s) => s.companies);
+/** Resolve a pallet type from a per-view selection (applies company overrides) */
+function resolvePallet(
+  palletTypes: PalletType[],
+  companies: CompanyPallet[],
+  sel: ViewPalletSelection | undefined
+): PalletType | null {
+  const basePallet = palletTypes.find((p) => p.id === sel?.palletId);
+  if (!basePallet || !sel) return basePallet ?? null;
 
-  return useMemo(() => {
-    const basePallet = palletTypes.find((p) => p.id === selectedPalletId);
-    if (!basePallet) return null;
-
-    if (selectedCompany) {
-      const company = companies.find((c) => c.companyName === selectedCompany);
-      const customPallet = company?.pallets.find(
-        (p) => p.palletTypeId === selectedPalletId
-      );
-      if (customPallet) {
-        return {
-          ...basePallet,
-          dimensions: customPallet.customDimensions ?? basePallet.dimensions,
-          innerDimensions: customPallet.customInnerDimensions ?? basePallet.innerDimensions,
-          maxWeight: customPallet.customMaxWeight ?? basePallet.maxWeight,
-        };
-      }
+  if (sel.company) {
+    const company = companies.find((c) => c.companyName === sel.company);
+    const customPallet = company?.pallets.find(
+      (p) => p.palletTypeId === sel.palletId
+    );
+    if (customPallet) {
+      return {
+        ...basePallet,
+        dimensions: customPallet.customDimensions ?? basePallet.dimensions,
+        innerDimensions: customPallet.customInnerDimensions ?? basePallet.innerDimensions,
+        maxWeight: customPallet.customMaxWeight ?? basePallet.maxWeight,
+      };
     }
-    return basePallet;
-  }, [palletTypes, selectedPalletId, selectedCompany, companies]);
+  }
+  return basePallet;
+}
+
+/** Reactive hook: resolved pallet for a specific view */
+export function useViewPallet(viewId: number): PalletType | null {
+  const palletTypes = usePalletStore((s) => s.palletTypes);
+  const companies = usePalletStore((s) => s.companies);
+  const sel = usePalletStore((s) => s.viewSelections[viewId]);
+
+  return useMemo(
+    () => resolvePallet(palletTypes, companies, sel),
+    [palletTypes, companies, sel]
+  );
+}
+
+/** Reactive hook: resolved pallet for the currently active view */
+export function useActivePallet(): PalletType | null {
+  const activeViewId = useViewStore((s) => s.activeViewId);
+  return useViewPallet(activeViewId);
+}
+
+/** Reactive hook: the active view's raw selection (palletId / company) */
+export function useActiveViewSelection(): ViewPalletSelection {
+  const activeViewId = useViewStore((s) => s.activeViewId);
+  const sel = usePalletStore((s) => s.viewSelections[activeViewId]);
+  return sel ?? EMPTY_SELECTION;
 }

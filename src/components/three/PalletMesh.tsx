@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { Edges, Text, Line } from '@react-three/drei';
-import { usePalletStore } from '../../store/usePalletStore';
+import { useViewPallet } from '../../store/usePalletStore';
+import { useViewId } from './ViewContext';
 
 const PALLET_THICKNESS = 5; // cm
 const WALL_THICKNESS = 2;   // cm
@@ -11,32 +12,9 @@ const WALL_OPACITY = 0.25;
 const EDGE_LINE_COLOR = '#7ab0d4';
 
 export function PalletMesh() {
-  // Subscribe to all reactive deps so component re-renders on change
-  const palletTypes = usePalletStore((s) => s.palletTypes);
-  const selectedPalletId = usePalletStore((s) => s.selectedPalletId);
-  const selectedCompany = usePalletStore((s) => s.selectedCompany);
-  const companies = usePalletStore((s) => s.companies);
-
-  const pallet = useMemo(() => {
-    const basePallet = palletTypes.find((p) => p.id === selectedPalletId);
-    if (!basePallet) return null;
-
-    if (selectedCompany) {
-      const company = companies.find((c) => c.companyName === selectedCompany);
-      const customPallet = company?.pallets.find(
-        (p) => p.palletTypeId === selectedPalletId
-      );
-      if (customPallet) {
-        return {
-          ...basePallet,
-          dimensions: customPallet.customDimensions ?? basePallet.dimensions,
-          innerDimensions: customPallet.customInnerDimensions ?? basePallet.innerDimensions,
-          maxWeight: customPallet.customMaxWeight ?? basePallet.maxWeight,
-        };
-      }
-    }
-    return basePallet;
-  }, [palletTypes, selectedPalletId, selectedCompany, companies]);
+  // Resolved pallet for the split view this canvas belongs to
+  const viewId = useViewId();
+  const pallet = useViewPallet(viewId);
 
   const geometry = useMemo(() => {
     if (!pallet) return null;

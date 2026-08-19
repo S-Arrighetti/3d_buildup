@@ -49,6 +49,7 @@ export interface CargoItem {
   position: Position;
   rotation: number;    // Y-axis rotation in degrees (0, 90, 180, 270)
   placed: boolean;     // whether placed on pallet
+  viewId?: number;     // which split view this cargo belongs to (default 0)
 }
 
 // --- Material ---
@@ -74,6 +75,7 @@ export interface PlacedMaterial {
   rotation: number;
   attachedCargoIds?: string[]; // for belts: which cargo items it secures
   routePoints?: Position[];    // for belts: ordered 3D points forming the belt path
+  viewId?: number;             // which split view this material belongs to (default 0)
 }
 
 // --- Contour ---

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { usePalletStore, useActivePallet } from '../../store/usePalletStore';
+import { usePalletStore, useActivePallet, useActiveViewSelection } from '../../store/usePalletStore';
+import { useViewStore } from '../../store/useViewStore';
 
 interface EditForm {
   length: number;
@@ -11,10 +12,10 @@ interface EditForm {
 }
 
 export function PalletPanel() {
+  const activeViewId = useViewStore((s) => s.activeViewId);
   const palletTypes = usePalletStore((s) => s.palletTypes);
   const companies = usePalletStore((s) => s.companies);
-  const selectedPalletId = usePalletStore((s) => s.selectedPalletId);
-  const selectedCompany = usePalletStore((s) => s.selectedCompany);
+  const { palletId: selectedPalletId, company: selectedCompany } = useActiveViewSelection();
   const selectPallet = usePalletStore((s) => s.selectPallet);
   const selectCompany = usePalletStore((s) => s.selectCompany);
   const updatePalletType = usePalletStore((s) => s.updatePalletType);
@@ -26,10 +27,10 @@ export function PalletPanel() {
 
   const activePallet = useActivePallet();
 
-  // When selected pallet changes, close edit form
+  // When selected pallet or active view changes, close edit form
   useEffect(() => {
     setEditing(false);
-  }, [selectedPalletId]);
+  }, [selectedPalletId, activeViewId]);
 
   const startEdit = () => {
     if (!activePallet) return;
@@ -61,6 +62,7 @@ export function PalletPanel() {
     <div className="space-y-3">
       <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
         Pallet / Container
+        <span className="ml-2 text-blue-400 normal-case">View {activeViewId + 1}</span>
       </h3>
 
       {/* Company selector */}

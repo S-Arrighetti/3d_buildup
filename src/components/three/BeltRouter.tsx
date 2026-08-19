@@ -3,8 +3,8 @@ import { Line, Html } from '@react-three/drei';
 import type { ThreeEvent } from '@react-three/fiber';
 import { useSceneStore } from '../../store/useSceneStore';
 import { useMaterialStore } from '../../store/useMaterialStore';
-import { useCargoStore } from '../../store/useCargoStore';
-import { useActivePallet } from '../../store/usePalletStore';
+import { useViewPallet } from '../../store/usePalletStore';
+import { useViewId, useViewCargoItems } from './ViewContext';
 import { useHistoryStore } from '../../store/useHistoryStore';
 import { getCargoAABB } from '../../utils/snapping';
 
@@ -26,8 +26,9 @@ export function BeltRouter() {
   const addBeltRoutePoint = useSceneStore((s) => s.addBeltRoutePoint);
   const cancelBeltRouting = useSceneStore((s) => s.cancelBeltRouting);
 
-  const items = useCargoStore((s) => s.items);
-  const pallet = useActivePallet();
+  const viewId = useViewId();
+  const items = useViewCargoItems(viewId);
+  const pallet = useViewPallet(viewId);
 
   // Boundary edge click zones - positioned OUTSIDE the boundary so they don't overlap cargo
   const edgeZones = useMemo(() => {

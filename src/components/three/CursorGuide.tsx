@@ -2,14 +2,15 @@ import { useRef, useState, useEffect } from 'react';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
 import { Line, Html } from '@react-three/drei';
-import { useActivePallet } from '../../store/usePalletStore';
+import { useViewPallet } from '../../store/usePalletStore';
+import { useViewId } from './ViewContext';
 import { useSceneStore } from '../../store/useSceneStore';
 
 const SCALE = 0.01; // must match Scene.tsx
 const SNAP_THRESHOLD = 2; // 2cm — "on the line" snap zone
 
 export function CursorGuide() {
-  const pallet = useActivePallet();
+  const pallet = useViewPallet(useViewId());
   const isDragging = useSceneStore((s) => s.isDragging);
   const beltRoutingMode = useSceneStore((s) => s.beltRoutingMode);
   const { camera, gl, invalidate } = useThree();

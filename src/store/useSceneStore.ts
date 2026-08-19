@@ -10,7 +10,8 @@ interface OrbitRef {
 
 interface SceneStore extends SceneState {
   rotationLocked: boolean;
-  orbitControlsRef: OrbitRef | null;
+  /** OrbitControls refs per split view (keyed by viewId) */
+  orbitControlsRefs: Record<number, OrbitRef | null>;
 
   // Belt routing mode
   beltRoutingMode: boolean;
@@ -23,7 +24,7 @@ interface SceneStore extends SceneState {
   setActiveContour: (id: string | null) => void;
   clearSelection: () => void;
   toggleRotationLock: () => void;
-  setOrbitControlsRef: (ref: OrbitRef | null) => void;
+  setOrbitControlsRef: (viewId: number, ref: OrbitRef | null) => void;
   disableOrbit: () => void;
   enableOrbit: () => void;
 
@@ -40,7 +41,7 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
   showContour: false,
   activeContourId: null,
   rotationLocked: false,
-  orbitControlsRef: null,
+  orbitControlsRefs: {},
 
   beltRoutingMode: false,
   beltRoutingMaterialTypeId: null,
@@ -52,22 +53,26 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
   setActiveContour: (id) => set({ activeContourId: id, showContour: id !== null }),
   clearSelection: () => set({ selectedObjectId: null, selectedObjectType: null }),
   toggleRotationLock: () => set((s) => ({ rotationLocked: !s.rotationLocked })),
-  setOrbitControlsRef: (ref) => set({ orbitControlsRef: ref }),
+  setOrbitControlsRef: (viewId, ref) =>
+    set((s) => ({ orbitControlsRefs: { ...s.orbitControlsRefs, [viewId]: ref } })),
 
-  // Disable rotate/pan during drag (zoom stays active)
+  // Disable rotate/pan during drag (zoom stays active) — applies to all views
   disableOrbit: () => {
-    const ref = get().orbitControlsRef;
-    if (ref) {
-      ref.enableRotate = false;
-      ref.enablePan = false;
+    for (const ref of Object.values(get().orbitControlsRefs)) {
+      if (ref) {
+        ref.enableRotate = false;
+        ref.enablePan = false;
+      }
     }
   },
   // Re-enable rotate/pan (respects lock state)
   enableOrbit: () => {
-    const { orbitControlsRef, rotationLocked } = get();
-    if (orbitControlsRef) {
-      orbitControlsRef.enableRotate = !rotationLocked;
-      orbitControlsRef.enablePan = !rotationLocked;
+    const { orbitControlsRefs, rotationLocked } = get();
+    for (const ref of Object.values(orbitControlsRefs)) {
+      if (ref) {
+        ref.enableRotate = !rotationLocked;
+        ref.enablePan = !rotationLocked;
+      }
     }
   },
 

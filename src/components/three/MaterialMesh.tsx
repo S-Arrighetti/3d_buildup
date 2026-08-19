@@ -4,16 +4,17 @@ import type { ThreeEvent } from '@react-three/fiber';
 import { useThree } from '@react-three/fiber';
 import { Edges, Html } from '@react-three/drei';
 import { useMaterialStore } from '../../store/useMaterialStore';
-import { useCargoStore } from '../../store/useCargoStore';
 import { useSceneStore } from '../../store/useSceneStore';
 import { useHistoryStore } from '../../store/useHistoryStore';
+import { useViewId, useViewCargoItems, useViewPlacedMaterials } from './ViewContext';
 import { findMaterialStackHeight } from '../../utils/snapping';
 import type { PlacedMaterial, MaterialType } from '../../types';
 
 const SCALE = 0.01;
 
 export function MaterialMeshGroup() {
-  const placedMaterials = useMaterialStore((s) => s.placedMaterials);
+  const viewId = useViewId();
+  const placedMaterials = useViewPlacedMaterials(viewId);
   const materialTypes = useMaterialStore((s) => s.materialTypes);
 
   return (
@@ -48,10 +49,11 @@ function SingleMaterialMesh({
   const selectedObjectId = useSceneStore((s) => s.selectedObjectId);
   const selectObject = useSceneStore((s) => s.selectObject);
   const setDraggingState = useSceneStore((s) => s.setDragging);
+  const viewId = useViewId();
   const updateMaterialPosition = useMaterialStore((s) => s.updateMaterialPosition);
-  const allPlacedMaterials = useMaterialStore((s) => s.placedMaterials);
+  const allPlacedMaterials = useViewPlacedMaterials(viewId);
   const allMaterialTypes = useMaterialStore((s) => s.materialTypes);
-  const cargoItems = useCargoStore((s) => s.items);
+  const cargoItems = useViewCargoItems(viewId);
 
   const isSelected = selectedObjectId === placed.id;
   const { length, width, height } = matType.dimensions;
