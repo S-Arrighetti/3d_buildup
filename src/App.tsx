@@ -5,6 +5,7 @@ import { StatusBar } from './components/layout/StatusBar';
 import { Scene } from './components/three/Scene';
 import { useHistoryStore } from './store/useHistoryStore';
 import { useSceneStore } from './store/useSceneStore';
+import { deleteSelectedObject } from './store/objectActions';
 import { useCargoStore, cargoInView } from './store/useCargoStore';
 import { useMaterialStore, materialsInView } from './store/useMaterialStore';
 import { findStackHeight } from './utils/snapping';
@@ -12,17 +13,25 @@ import { findStackHeight } from './utils/snapping';
 export default function App() {
   const lastNudgeTime = useRef(0);
 
-  // Global keyboard handler: Ctrl+Z undo + Arrow key nudge
+  // Global keyboard handler: Ctrl+Z undo, Delete, Arrow key nudge
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Skip if user is typing in an input/textarea/select
-      const tag = (e.target as HTMLElement)?.tagName;
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (target?.isContentEditable) return;
 
       // Ctrl+Z undo
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
         e.preventDefault();
         useHistoryStore.getState().undo();
+        return;
+      }
+
+      // Delete / Backspace removes the selected cargo or material
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (deleteSelectedObject()) e.preventDefault();
         return;
       }
 
