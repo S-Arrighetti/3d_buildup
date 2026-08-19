@@ -10,6 +10,7 @@ import { HeightRuler } from './HeightRuler';
 import { BeltSimulation } from './BeltSimulation';
 import { BeltRouter } from './BeltRouter';
 import { CursorGuide } from './CursorGuide';
+import { DropPreview } from './DropPreview';
 import { ViewIdContext } from './ViewContext';
 import { useSceneStore } from '../../store/useSceneStore';
 import { useViewStore, MAX_VIEWS, visibleViewIds } from '../../store/useViewStore';
@@ -74,6 +75,8 @@ function SceneContent({ viewId, active }: { viewId: number; active: boolean }) {
         <OverhangIndicator />
         <HeightRuler />
         <BeltSimulation />
+        {/* Ghost for an item being dragged in from another pane */}
+        <DropPreview />
         {/* Interactive helpers only in the active view */}
         {active && <BeltRouter />}
         {active && <CursorGuide />}

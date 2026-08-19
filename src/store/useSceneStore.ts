@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type * as THREE from 'three';
-import type { SceneState, Position } from '../types';
+import type { SceneState, Position, Dimensions } from '../types';
 
 interface OrbitRef {
   enabled: boolean;
@@ -15,6 +15,18 @@ export interface ViewViewport {
   el: HTMLCanvasElement;
 }
 
+/** Ghost shown in the target pane while dragging an item across views */
+export interface DropPreview {
+  viewId: number;
+  position: Position;
+  dimensions: Dimensions;
+  rotation: number;
+  color: string;
+  label: string;
+  /** false when the landing spot is off the pallet */
+  valid: boolean;
+}
+
 interface SceneStore extends SceneState {
   rotationLocked: boolean;
   /** OrbitControls refs per split view (keyed by viewId) */
@@ -23,6 +35,8 @@ interface SceneStore extends SceneState {
   viewViewports: Record<number, ViewViewport | null>;
   /** Pane the pointer is currently over mid-drag, for the drop highlight */
   dragOverViewId: number | null;
+  /** Where the dragged item would land in that pane */
+  dropPreview: DropPreview | null;
 
   // Belt routing mode
   beltRoutingMode: boolean;
@@ -38,6 +52,7 @@ interface SceneStore extends SceneState {
   setOrbitControlsRef: (viewId: number, ref: OrbitRef | null) => void;
   setViewViewport: (viewId: number, viewport: ViewViewport | null) => void;
   setDragOverView: (viewId: number | null) => void;
+  setDropPreview: (preview: DropPreview | null) => void;
   disableOrbit: () => void;
   enableOrbit: () => void;
 
@@ -57,6 +72,7 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
   orbitControlsRefs: {},
   viewViewports: {},
   dragOverViewId: null,
+  dropPreview: null,
 
   beltRoutingMode: false,
   beltRoutingMaterialTypeId: null,
@@ -78,6 +94,25 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
   // panes don't re-render on each frame
   setDragOverView: (viewId) => {
     if (get().dragOverViewId !== viewId) set({ dragOverViewId: viewId });
+  },
+
+  setDropPreview: (preview) => {
+    // Skip no-op sets so the ghost doesn't re-render every frame while the
+    // pointer sits still
+    const prev = get().dropPreview;
+    if (
+      prev === preview ||
+      (prev &&
+        preview &&
+        prev.viewId === preview.viewId &&
+        prev.valid === preview.valid &&
+        prev.position.x === preview.position.x &&
+        prev.position.y === preview.position.y &&
+        prev.position.z === preview.position.z)
+    ) {
+      return;
+    }
+    set({ dropPreview: preview });
   },
 
   // Disable rotate/pan during drag (zoom stays active) — applies to all views
