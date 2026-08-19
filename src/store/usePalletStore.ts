@@ -93,13 +93,20 @@ export const usePalletStore = create<PalletStore>()(
     }),
     {
       name: 'buildup-pallet-store',
-      version: 11,
-      migrate: () => {
-        // v→11: per-view pallet selections (4-screen split layout)
+      version: 12,
+      // Additive, like the material store: keep everything the user has and
+      // fill in defaults they are missing. Earlier versions replaced the whole
+      // store, which threw away hand-made pallets and companies on every bump.
+      migrate: (persisted) => {
+        const s = persisted as Partial<PalletStore> | undefined;
+        const defaults = defaultPallets as PalletType[];
+        const stored = s?.palletTypes ?? [];
+        const storedIds = new Set(stored.map((p) => p.id));
+
         return {
-          palletTypes: defaultPallets as PalletType[],
-          companies: defaultCompanies as CompanyPallet[],
-          viewSelections: defaultViewSelections(),
+          palletTypes: [...stored, ...defaults.filter((d) => !storedIds.has(d.id))],
+          companies: s?.companies ?? (defaultCompanies as CompanyPallet[]),
+          viewSelections: s?.viewSelections ?? defaultViewSelections(),
         };
       },
     }

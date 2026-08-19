@@ -1,4 +1,4 @@
-import type { CargoItem, Position, Dimensions, PlacedMaterial, MaterialType, MeshShape } from '../types';
+import type { CargoItem, Position, Dimensions, PlacedMaterial, MaterialType } from '../types';
 
 const SNAP_THRESHOLD = 5; // cm - snap distance
 
@@ -43,7 +43,7 @@ export function snapPosition(
   otherCargos: CargoItem[],
   palletDimensions: Dimensions
 ): Position {
-  let snapped = { ...pos };
+  const snapped = { ...pos };
   const { w, d, h } = getEffectiveDimensions(movingCargo.dimensions, movingCargo.rotation);
   const halfW = w / 2;
   const halfD = d / 2;

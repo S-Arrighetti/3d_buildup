@@ -119,7 +119,11 @@ export const useMaterialStore = create<MaterialStore>()(
     {
       name: 'buildup-material-store',
       version: 3,
-      partialize: (state) => ({ materialTypes: state.materialTypes }),
+      // Both the catalogue and the laid-out materials survive a reload
+      partialize: (state) => ({
+        materialTypes: state.materialTypes,
+        placedMaterials: state.placedMaterials,
+      }),
       migrate: (_persisted) => {
         const state = _persisted as Pick<MaterialStore, 'materialTypes'>;
         const defaults = defaultMaterials as MaterialType[];
@@ -135,16 +139,6 @@ export const useMaterialStore = create<MaterialStore>()(
           return def?.meshShape ? { ...m, meshShape: def.meshShape } : m;
         });
         return { materialTypes: [...merged, ...newTypes] };
-      },
-      // The migrate above only fires when the stored version is behind, which
-      // leaves CK SKID in place for anyone whose store is already at v3. Sweep
-      // it on every load so the result doesn't depend on migration history.
-      onRehydrateStorage: () => (state) => {
-        if (!state) return;
-        const cleaned = state.materialTypes.filter((m) => !isRetiredCkSkid(m));
-        if (cleaned.length !== state.materialTypes.length) {
-          useMaterialStore.setState({ materialTypes: cleaned });
-        }
       },
     }
   )
