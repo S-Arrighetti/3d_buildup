@@ -136,6 +136,16 @@ export const useMaterialStore = create<MaterialStore>()(
         });
         return { materialTypes: [...merged, ...newTypes] };
       },
+      // The migrate above only fires when the stored version is behind, which
+      // leaves CK SKID in place for anyone whose store is already at v3. Sweep
+      // it on every load so the result doesn't depend on migration history.
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+        const cleaned = state.materialTypes.filter((m) => !isRetiredCkSkid(m));
+        if (cleaned.length !== state.materialTypes.length) {
+          useMaterialStore.setState({ materialTypes: cleaned });
+        }
+      },
     }
   )
 );
