@@ -3,6 +3,7 @@ import { useCargoStore } from '../../store/useCargoStore';
 import { useMaterialStore } from '../../store/useMaterialStore';
 import { useSceneStore } from '../../store/useSceneStore';
 import { useHistoryStore } from '../../store/useHistoryStore';
+import { useViewStore, VIEW_IDS } from '../../store/useViewStore';
 
 export function Toolbar() {
   const showContour = useContourStore((s) => s.showContour);
@@ -25,6 +26,11 @@ export function Toolbar() {
   const items = useCargoStore((s) => s.items);
   const placedMaterials = useMaterialStore((s) => s.placedMaterials);
   const clearSelection = useSceneStore((s) => s.clearSelection);
+
+  const activeViewId = useViewStore((s) => s.activeViewId);
+  const setActiveView = useViewStore((s) => s.setActiveView);
+  const layout = useViewStore((s) => s.layout);
+  const setLayout = useViewStore((s) => s.setLayout);
 
   const handleDelete = () => {
     if (!selectedObjectId) return;
@@ -55,14 +61,41 @@ export function Toolbar() {
 
   const handleClearAll = () => {
     useHistoryStore.getState().pushSnapshot();
-    clearAllCargo();
-    clearAllMaterials();
+    clearAllCargo(activeViewId);
+    clearAllMaterials(activeViewId);
     clearSelection();
   };
 
   return (
     <div className="h-10 bg-gray-800 border-b border-gray-700 flex items-center px-3 gap-2">
       <span className="text-sm font-bold text-white mr-4">3D Build-Up</span>
+
+      {/* View selector (4-screen split, single active target) */}
+      <div className="flex items-center gap-0.5">
+        {VIEW_IDS.map((id) => (
+          <button
+            key={id}
+            onClick={() => setActiveView(id)}
+            className={`text-xs w-6 py-1 rounded font-medium transition-colors ${
+              activeViewId === id
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+            }`}
+            title={`Activate view ${id + 1}`}
+          >
+            {id + 1}
+          </button>
+        ))}
+      </div>
+
+      {/* Layout toggle: quad split / single view */}
+      <button
+        onClick={() => setLayout(layout === 'quad' ? 'single' : 'quad')}
+        className="text-xs px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded"
+        title={layout === 'quad' ? 'Switch to single view' : 'Switch to 4-view split'}
+      >
+        {layout === 'quad' ? '⊞ 4-View' : '▣ 1-View'}
+      </button>
 
       <div className="h-5 w-px bg-gray-600" />
 
@@ -163,8 +196,9 @@ export function Toolbar() {
       <button
         onClick={handleClearAll}
         className="text-xs px-2 py-1 bg-red-800/60 hover:bg-red-700 text-red-200 rounded"
+        title={`Clear cargo & materials in view ${activeViewId + 1}`}
       >
-        Clear All
+        Clear View {activeViewId + 1}
       </button>
     </div>
   );

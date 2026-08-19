@@ -1,9 +1,9 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
-import { useCargoStore } from '../../store/useCargoStore';
-import { useActivePallet } from '../../store/usePalletStore';
+import { useViewPallet } from '../../store/usePalletStore';
 import { useMaterialStore } from '../../store/useMaterialStore';
+import { useViewId, useViewCargoItems, useViewPlacedMaterials } from './ViewContext';
 import { getMaxStackHeightWithMaterials } from '../../utils/collision';
 
 const RULER_STEP = 50; // cm
@@ -18,10 +18,11 @@ function LineSeg({ points, color }: { points: [THREE.Vector3, THREE.Vector3]; co
 }
 
 export function HeightRuler() {
-  const items = useCargoStore((s) => s.items);
-  const placedMaterials = useMaterialStore((s) => s.placedMaterials);
+  const viewId = useViewId();
+  const items = useViewCargoItems(viewId);
+  const placedMaterials = useViewPlacedMaterials(viewId);
   const materialTypes = useMaterialStore((s) => s.materialTypes);
-  const pallet = useActivePallet();
+  const pallet = useViewPallet(viewId);
 
   const maxHeight = useMemo(
     () => getMaxStackHeightWithMaterials(items, placedMaterials, materialTypes),

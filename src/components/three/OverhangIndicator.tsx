@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 import * as THREE from 'three';
 import { Line, Html } from '@react-three/drei';
-import { useCargoStore } from '../../store/useCargoStore';
 import { useMaterialStore } from '../../store/useMaterialStore';
-import { useActivePallet } from '../../store/usePalletStore';
+import { useViewPallet } from '../../store/usePalletStore';
+import { useViewId, useViewCargoItems, useViewPlacedMaterials } from './ViewContext';
 import {
   checkAllOverhangs, checkAllInnerOverhangs,
   checkAllMaterialOverhangs, checkAllMaterialInnerOverhangs,
@@ -130,10 +130,11 @@ function OverhangFace({ line }: { line: OverhangLine }) {
 }
 
 export function OverhangIndicator() {
-  const items = useCargoStore((s) => s.items);
-  const placedMaterials = useMaterialStore((s) => s.placedMaterials);
+  const viewId = useViewId();
+  const items = useViewCargoItems(viewId);
+  const placedMaterials = useViewPlacedMaterials(viewId);
   const materialTypes = useMaterialStore((s) => s.materialTypes);
-  const pallet = useActivePallet();
+  const pallet = useViewPallet(viewId);
 
   const allLines = useMemo(() => {
     if (!pallet) return [];

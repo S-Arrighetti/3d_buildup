@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
-import { useCargoStore } from '../../store/useCargoStore';
 import { useMaterialStore } from '../../store/useMaterialStore';
+import { useViewId, useViewCargoItems, useViewPlacedMaterials } from './ViewContext';
 import { getCargoAABB } from '../../utils/snapping';
 
 const STRAP_WIDTH = 5;       // 5cm wide
@@ -46,8 +46,9 @@ function tangentToQuaternion(tangent: THREE.Vector3): THREE.Quaternion {
 }
 
 export function BeltSimulation() {
-  const items = useCargoStore((s) => s.items);
-  const placedMaterials = useMaterialStore((s) => s.placedMaterials);
+  const viewId = useViewId();
+  const items = useViewCargoItems(viewId);
+  const placedMaterials = useViewPlacedMaterials(viewId);
   const materialTypes = useMaterialStore((s) => s.materialTypes);
 
   const strapShape = useMemo(() => createStrapShape(), []);

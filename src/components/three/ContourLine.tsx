@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { useContourStore } from '../../store/useContourStore';
-import { useActivePallet } from '../../store/usePalletStore';
+import { useViewPallet } from '../../store/usePalletStore';
+import { useViewId } from './ViewContext';
 import { generateContourLinePoints } from '../../utils/contourCheck';
 
 function LineObj({ geometry, color }: { geometry: THREE.BufferGeometry; color: string }) {
@@ -18,7 +19,7 @@ export function ContourLine() {
   const showContour = useContourStore((s) => s.showContour);
 
   const contour = contours.find((c) => c.id === activeContourId) ?? null;
-  const pallet = useActivePallet();
+  const pallet = useViewPallet(useViewId());
 
   const lineGeometry = useMemo(() => {
     if (!contour || !pallet) return null;

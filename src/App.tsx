@@ -5,8 +5,8 @@ import { StatusBar } from './components/layout/StatusBar';
 import { Scene } from './components/three/Scene';
 import { useHistoryStore } from './store/useHistoryStore';
 import { useSceneStore } from './store/useSceneStore';
-import { useCargoStore } from './store/useCargoStore';
-import { useMaterialStore } from './store/useMaterialStore';
+import { useCargoStore, cargoInView } from './store/useCargoStore';
+import { useMaterialStore, materialsInView } from './store/useMaterialStore';
 import { findStackHeight } from './utils/snapping';
 
 export default function App() {
@@ -52,11 +52,12 @@ export default function App() {
       if (selectedObjectType === 'cargo') {
         const cargo = useCargoStore.getState().items.find((c) => c.id === selectedObjectId);
         if (!cargo || !cargo.placed) return;
+        const cargoViewId = cargo.viewId ?? 0;
         const newX = cargo.position.x + dir.dx * step;
         const newZ = cargo.position.z + dir.dz * step;
-        // Recalculate stack height at new position
-        const otherCargos = useCargoStore.getState().items;
-        const placedMats = useMaterialStore.getState().placedMaterials;
+        // Recalculate stack height at new position (same view only)
+        const otherCargos = cargoInView(useCargoStore.getState().items, cargoViewId);
+        const placedMats = materialsInView(useMaterialStore.getState().placedMaterials, cargoViewId);
         const matTypes = useMaterialStore.getState().materialTypes;
         const stackY = findStackHeight(
           { x: newX, y: cargo.position.y, z: newZ },

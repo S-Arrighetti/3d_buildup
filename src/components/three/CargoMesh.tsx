@@ -3,18 +3,20 @@ import * as THREE from 'three';
 import type { ThreeEvent } from '@react-three/fiber';
 import { useThree } from '@react-three/fiber';
 import { Edges, Text, Html } from '@react-three/drei';
-import { useCargoStore } from '../../store/useCargoStore';
-import { useMaterialStore } from '../../store/useMaterialStore';
-import { useActivePallet } from '../../store/usePalletStore';
+import { useCargoStore, cargoInView } from '../../store/useCargoStore';
+import { useMaterialStore, materialsInView } from '../../store/useMaterialStore';
+import { useViewPallet } from '../../store/usePalletStore';
 import { useSceneStore } from '../../store/useSceneStore';
 import { useHistoryStore } from '../../store/useHistoryStore';
+import { useViewId, useViewCargoItems, useViewPlacedMaterials } from './ViewContext';
 import { snapPosition, findStackHeight, getEffectiveDimensions } from '../../utils/snapping';
 import type { CargoItem } from '../../types';
 
 const SCALE = 0.01; // must match Scene.tsx
 
 export function CargoMeshGroup() {
-  const items = useCargoStore((s) => s.items);
+  const viewId = useViewId();
+  const items = useViewCargoItems(viewId);
   return (
     <>
       {items.map((cargo) => (
@@ -42,11 +44,12 @@ function SingleCargoMesh({ cargo }: { cargo: CargoItem }) {
   const disableOrbit = useSceneStore((s) => s.disableOrbit);
   const enableOrbit = useSceneStore((s) => s.enableOrbit);
 
+  const viewId = useViewId();
   const updateCargoPosition = useCargoStore((s) => s.updateCargoPosition);
-  const items = useCargoStore((s) => s.items);
-  const placedMaterials = useMaterialStore((s) => s.placedMaterials);
+  const items = useViewCargoItems(viewId);
+  const placedMaterials = useViewPlacedMaterials(viewId);
   const materialTypes = useMaterialStore((s) => s.materialTypes);
-  const pallet = useActivePallet();
+  const pallet = useViewPallet(viewId);
 
   const isSelected = selectedObjectId === cargo.id;
   const { h } = getEffectiveDimensions(cargo.dimensions, cargo.rotation);
@@ -152,8 +155,8 @@ function SingleCargoMesh({ cargo }: { cargo: CargoItem }) {
           const stackY = findStackHeight(
             { x: updatedCargo.position.x, y: updatedCargo.position.y, z: updatedCargo.position.z },
             updatedCargo,
-            useCargoStore.getState().items,
-            useMaterialStore.getState().placedMaterials,
+            cargoInView(useCargoStore.getState().items, viewId),
+            materialsInView(useMaterialStore.getState().placedMaterials, viewId),
             useMaterialStore.getState().materialTypes
           );
           useCargoStore.getState().updateCargoPosition(currentCargo.id, {
@@ -178,7 +181,7 @@ function SingleCargoMesh({ cargo }: { cargo: CargoItem }) {
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
     };
-  }, [dragging, cargo, items, pallet, h, placedMaterials, materialTypes, getWorldPosFromMouse, updateCargoPosition, setDraggingState]);
+  }, [dragging, cargo, items, pallet, h, placedMaterials, materialTypes, viewId, getWorldPosFromMouse, updateCargoPosition, setDraggingState]);
 
   return (
     <group

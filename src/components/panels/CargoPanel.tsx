@@ -1,9 +1,10 @@
-import { useState } from 'react';
-import { useCargoStore } from '../../store/useCargoStore';
-import { useMaterialStore } from '../../store/useMaterialStore';
+import { useMemo, useState } from 'react';
+import { useCargoStore, cargoInView } from '../../store/useCargoStore';
+import { useMaterialStore, materialsInView } from '../../store/useMaterialStore';
 import { useSceneStore } from '../../store/useSceneStore';
 import { useHistoryStore } from '../../store/useHistoryStore';
 import { useActivePallet } from '../../store/usePalletStore';
+import { useViewStore } from '../../store/useViewStore';
 import { findStackHeight } from '../../utils/snapping';
 import type { CargoItem, Position } from '../../types';
 
@@ -52,7 +53,9 @@ function findNextStagingPosition(
 }
 
 export function CargoPanel() {
-  const items = useCargoStore((s) => s.items);
+  const activeViewId = useViewStore((s) => s.activeViewId);
+  const allItems = useCargoStore((s) => s.items);
+  const items = useMemo(() => cargoInView(allItems, activeViewId), [allItems, activeViewId]);
   const addCargo = useCargoStore((s) => s.addCargo);
   const removeCargo = useCargoStore((s) => s.removeCargo);
   const setCargoPlaced = useCargoStore((s) => s.setCargoPlaced);
@@ -62,7 +65,11 @@ export function CargoPanel() {
   const selectObject = useSceneStore((s) => s.selectObject);
   const selectedObjectId = useSceneStore((s) => s.selectedObjectId);
   const activePallet = useActivePallet();
-  const placedMaterials = useMaterialStore((s) => s.placedMaterials);
+  const allPlacedMaterials = useMaterialStore((s) => s.placedMaterials);
+  const placedMaterials = useMemo(
+    () => materialsInView(allPlacedMaterials, activeViewId),
+    [allPlacedMaterials, activeViewId]
+  );
   const materialTypes = useMaterialStore((s) => s.materialTypes);
 
   const [form, setForm] = useState({
@@ -79,7 +86,7 @@ export function CargoPanel() {
     for (let i = 0; i < form.quantity; i++) {
       const position = activePallet
         ? findNextStagingPosition(
-            useCargoStore.getState().items,
+            cargoInView(useCargoStore.getState().items, activeViewId),
             activePallet.dimensions.length,
             activePallet.dimensions.width,
             form.height
@@ -123,6 +130,7 @@ export function CargoPanel() {
     <div className="space-y-3">
       <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider">
         Cargo
+        <span className="ml-2 text-blue-400 normal-case">View {activeViewId + 1}</span>
       </h3>
 
       {/* Add cargo form */}
@@ -306,10 +314,10 @@ export function CargoPanel() {
 
       {items.length > 0 && (
         <button
-          onClick={() => { useHistoryStore.getState().pushSnapshot(); clearAll(); }}
+          onClick={() => { useHistoryStore.getState().pushSnapshot(); clearAll(activeViewId); }}
           className="w-full bg-red-800/60 hover:bg-red-700 text-red-200 text-xs py-1 rounded"
         >
-          Clear All Cargo
+          Clear View Cargo
         </button>
       )}
     </div>

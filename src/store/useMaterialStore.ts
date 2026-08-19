@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import type { MaterialType, PlacedMaterial, Position } from '../types';
 import defaultMaterials from '../data/materials.json';
+import { useViewStore } from './useViewStore';
 
 interface MaterialStore {
   materialTypes: MaterialType[];
@@ -14,13 +15,19 @@ interface MaterialStore {
   updateMaterialPosition: (id: string, position: Position) => void;
   updateMaterialRotation: (id: string, rotation: number) => void;
   attachBeltToCargo: (materialId: string, cargoIds: string[]) => void;
-  clearAllPlaced: () => void;
+  /** Clear placed materials — only the given view's when viewId is provided */
+  clearAllPlaced: (viewId?: number) => void;
 
   // DB management
   addMaterialType: (mat: MaterialType) => void;
   updateMaterialType: (id: string, updates: Partial<MaterialType>) => void;
   deleteMaterialType: (id: string) => void;
   getMaterialType: (id: string) => MaterialType | undefined;
+}
+
+/** Filter helper: materials belonging to a view (legacy items without viewId → view 0) */
+export function materialsInView(mats: PlacedMaterial[], viewId: number): PlacedMaterial[] {
+  return mats.filter((m) => (m.viewId ?? 0) === viewId);
 }
 
 export const useMaterialStore = create<MaterialStore>()(
@@ -31,10 +38,11 @@ export const useMaterialStore = create<MaterialStore>()(
 
       placeMaterial: (materialTypeId, position) => {
         const id = uuidv4();
+        const viewId = useViewStore.getState().activeViewId;
         set((s) => ({
           placedMaterials: [
             ...s.placedMaterials,
-            { id, materialTypeId, position, rotation: 0 },
+            { id, materialTypeId, position, rotation: 0, viewId },
           ],
         }));
         return id;
@@ -66,7 +74,13 @@ export const useMaterialStore = create<MaterialStore>()(
           ),
         })),
 
-      clearAllPlaced: () => set({ placedMaterials: [] }),
+      clearAllPlaced: (viewId) =>
+        set((s) => ({
+          placedMaterials:
+            viewId === undefined
+              ? []
+              : s.placedMaterials.filter((m) => (m.viewId ?? 0) !== viewId),
+        })),
 
       addMaterialType: (mat) =>
         set((s) => ({ materialTypes: [...s.materialTypes, mat] })),

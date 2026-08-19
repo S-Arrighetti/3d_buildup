@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
-import { useCargoStore } from '../../store/useCargoStore';
+import { useCargoStore, cargoInView } from '../../store/useCargoStore';
 import { useActivePallet } from '../../store/usePalletStore';
-import { useMaterialStore } from '../../store/useMaterialStore';
+import { useMaterialStore, materialsInView } from '../../store/useMaterialStore';
 import { useContourStore } from '../../store/useContourStore';
+import { useViewStore } from '../../store/useViewStore';
 import {
   getMaxStackHeightWithMaterials, checkAllOverhangs, checkAllInnerOverhangs,
   checkAllMaterialOverhangs, checkAllMaterialInnerOverhangs,
@@ -10,10 +11,16 @@ import {
 import { checkContourViolations } from '../../utils/contourCheck';
 
 export function StatusBar() {
-  const items = useCargoStore((s) => s.items);
+  const activeViewId = useViewStore((s) => s.activeViewId);
+  const allItems = useCargoStore((s) => s.items);
+  const items = useMemo(() => cargoInView(allItems, activeViewId), [allItems, activeViewId]);
   const getTotalWeight = useCargoStore((s) => s.getTotalWeight);
   const getTotalVolume = useCargoStore((s) => s.getTotalVolume);
-  const placedMaterials = useMaterialStore((s) => s.placedMaterials);
+  const allPlacedMaterials = useMaterialStore((s) => s.placedMaterials);
+  const placedMaterials = useMemo(
+    () => materialsInView(allPlacedMaterials, activeViewId),
+    [allPlacedMaterials, activeViewId]
+  );
   const materialTypes = useMaterialStore((s) => s.materialTypes);
   const contours = useContourStore((s) => s.contours);
   const activeContourId = useContourStore((s) => s.activeContourId);
@@ -23,8 +30,8 @@ export function StatusBar() {
 
   const stats = useMemo(() => {
     const placedCount = items.filter((c) => c.placed).length;
-    const totalWeight = getTotalWeight();
-    const totalVolume = getTotalVolume();
+    const totalWeight = getTotalWeight(activeViewId);
+    const totalVolume = getTotalVolume(activeViewId);
     const maxHeight = getMaxStackHeightWithMaterials(items, placedMaterials, materialTypes);
 
     let palletVolume = 0;
@@ -86,10 +93,14 @@ export function StatusBar() {
       contourViolations,
       materialCount: placedMaterials.length,
     };
-  }, [items, pallet, placedMaterials, materialTypes, contour, getTotalWeight, getTotalVolume]);
+  }, [items, pallet, placedMaterials, materialTypes, contour, getTotalWeight, getTotalVolume, activeViewId]);
 
   return (
     <div className="h-8 bg-gray-800 border-t border-gray-700 flex items-center px-3 gap-4 text-xs">
+      <span className="text-blue-400 font-medium">View {activeViewId + 1}</span>
+
+      <div className="h-4 w-px bg-gray-600" />
+
       <span className="text-gray-400">
         Cargo: <span className="text-white">{stats.placedCount}/{stats.totalCount}</span>
       </span>
