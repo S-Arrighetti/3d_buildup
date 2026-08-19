@@ -5,6 +5,7 @@ import { useSceneStore } from '../../store/useSceneStore';
 import { useHistoryStore } from '../../store/useHistoryStore';
 import { useViewStore, MAX_VIEWS, visibleViewIds } from '../../store/useViewStore';
 import { deleteView, viewContentCount } from '../../store/viewActions';
+import { deleteSelectedObject } from '../../store/objectActions';
 
 export function Toolbar() {
   const showContour = useContourStore((s) => s.showContour);
@@ -20,8 +21,6 @@ export function Toolbar() {
   const rotationLocked = useSceneStore((s) => s.rotationLocked);
   const toggleRotationLock = useSceneStore((s) => s.toggleRotationLock);
 
-  const removeCargo = useCargoStore((s) => s.removeCargo);
-  const removeMaterial = useMaterialStore((s) => s.removePlacedMaterial);
   const updateCargoRotation = useCargoStore((s) => s.updateCargoRotation);
   const updateMaterialRotation = useMaterialStore((s) => s.updateMaterialRotation);
   const items = useCargoStore((s) => s.items);
@@ -46,16 +45,7 @@ export function Toolbar() {
     deleteView(activeViewId);
   };
 
-  const handleDelete = () => {
-    if (!selectedObjectId) return;
-    useHistoryStore.getState().pushSnapshot();
-    if (selectedObjectType === 'cargo') {
-      removeCargo(selectedObjectId);
-    } else if (selectedObjectType === 'material') {
-      removeMaterial(selectedObjectId);
-    }
-    clearSelection();
-  };
+  const handleDelete = () => deleteSelectedObject();
 
   const handleRotate = (delta: number) => {
     if (!selectedObjectId) return;
@@ -173,7 +163,7 @@ export function Toolbar() {
         onClick={handleDelete}
         disabled={!selectedObjectId}
         className="text-xs px-2 py-1 bg-gray-700 hover:bg-red-700 disabled:opacity-30 disabled:cursor-not-allowed text-gray-300 rounded"
-        title="Delete selected"
+        title="Delete selected (Del)"
       >
         ✕ Delete
       </button>
