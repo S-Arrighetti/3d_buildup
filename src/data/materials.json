@@ -8,6 +8,14 @@
     "description": "Standard wooden skid/pallet"
   },
   {
+    "id": "skid-small",
+    "name": "Skid (Small)",
+    "category": "skid",
+    "dimensions": { "length": 100, "width": 100, "height": 15 },
+    "color": "#6F4E37",
+    "description": "Small wooden skid/pallet 100x100cm"
+  },
+  {
     "id": "skid-large",
     "name": "Skid (Large)",
     "category": "skid",
