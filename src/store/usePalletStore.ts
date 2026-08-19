@@ -4,7 +4,7 @@ import { persist } from 'zustand/middleware';
 import type { PalletType, CompanyPallet } from '../types';
 import defaultPallets from '../data/pallets.json';
 import defaultCompanies from '../data/companies.json';
-import { useViewStore, VIEW_IDS } from './useViewStore';
+import { useViewStore, MAX_VIEWS } from './useViewStore';
 
 /** Per-view pallet selection */
 export interface ViewPalletSelection {
@@ -14,9 +14,10 @@ export interface ViewPalletSelection {
 
 const EMPTY_SELECTION: ViewPalletSelection = { palletId: null, company: null };
 
-function defaultViewSelections(): Record<number, ViewPalletSelection> {
+/** Selections are kept for every possible pane, not just the visible ones */
+export function defaultViewSelections(): Record<number, ViewPalletSelection> {
   const sel: Record<number, ViewPalletSelection> = {};
-  for (const id of VIEW_IDS) {
+  for (let id = 0; id < MAX_VIEWS; id++) {
     sel[id] = { palletId: 'pmc', company: null };
   }
   return sel;
@@ -129,6 +130,12 @@ function resolvePallet(
     }
   }
   return basePallet;
+}
+
+/** Non-reactive read: resolved pallet for a view, for use outside React */
+export function getViewPallet(viewId: number): PalletType | null {
+  const { palletTypes, companies, viewSelections } = usePalletStore.getState();
+  return resolvePallet(palletTypes, companies, viewSelections[viewId]);
 }
 
 /** Reactive hook: resolved pallet for a specific view */

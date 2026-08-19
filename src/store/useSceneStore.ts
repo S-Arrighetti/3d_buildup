@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type * as THREE from 'three';
 import type { SceneState, Position } from '../types';
 
 interface OrbitRef {
@@ -8,10 +9,20 @@ interface OrbitRef {
   enableZoom: boolean;
 }
 
+/** A pane's camera and canvas, needed to hit-test and unproject across panes */
+export interface ViewViewport {
+  camera: THREE.Camera;
+  el: HTMLCanvasElement;
+}
+
 interface SceneStore extends SceneState {
   rotationLocked: boolean;
   /** OrbitControls refs per split view (keyed by viewId) */
   orbitControlsRefs: Record<number, OrbitRef | null>;
+  /** Camera + canvas per split view, registered from inside each Canvas */
+  viewViewports: Record<number, ViewViewport | null>;
+  /** Pane the pointer is currently over mid-drag, for the drop highlight */
+  dragOverViewId: number | null;
 
   // Belt routing mode
   beltRoutingMode: boolean;
@@ -25,6 +36,8 @@ interface SceneStore extends SceneState {
   clearSelection: () => void;
   toggleRotationLock: () => void;
   setOrbitControlsRef: (viewId: number, ref: OrbitRef | null) => void;
+  setViewViewport: (viewId: number, viewport: ViewViewport | null) => void;
+  setDragOverView: (viewId: number | null) => void;
   disableOrbit: () => void;
   enableOrbit: () => void;
 
@@ -42,6 +55,8 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
   activeContourId: null,
   rotationLocked: false,
   orbitControlsRefs: {},
+  viewViewports: {},
+  dragOverViewId: null,
 
   beltRoutingMode: false,
   beltRoutingMaterialTypeId: null,
@@ -55,6 +70,15 @@ export const useSceneStore = create<SceneStore>((set, get) => ({
   toggleRotationLock: () => set((s) => ({ rotationLocked: !s.rotationLocked })),
   setOrbitControlsRef: (viewId, ref) =>
     set((s) => ({ orbitControlsRefs: { ...s.orbitControlsRefs, [viewId]: ref } })),
+
+  setViewViewport: (viewId, viewport) =>
+    set((s) => ({ viewViewports: { ...s.viewViewports, [viewId]: viewport } })),
+
+  // Called on every pointermove during a drag — skip the set when unchanged so
+  // panes don't re-render on each frame
+  setDragOverView: (viewId) => {
+    if (get().dragOverViewId !== viewId) set({ dragOverViewId: viewId });
+  },
 
   // Disable rotate/pan during drag (zoom stays active) — applies to all views
   disableOrbit: () => {

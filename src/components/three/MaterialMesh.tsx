@@ -8,6 +8,7 @@ import { useSceneStore } from '../../store/useSceneStore';
 import { useHistoryStore } from '../../store/useHistoryStore';
 import { useViewId, useViewCargoItems, useViewPlacedMaterials } from './ViewContext';
 import { findMaterialStackHeight } from '../../utils/snapping';
+import { viewAtPoint, dropMaterialIntoView } from '../../utils/viewDrop';
 import type { PlacedMaterial, MaterialType } from '../../types';
 
 const SCALE = 0.01;
@@ -120,6 +121,10 @@ function SingleMaterialMesh({
       if (!didDrag.current && Math.sqrt(dx * dx + dy * dy) < DRAG_THRESHOLD) return;
       didDrag.current = true;
 
+      // Highlight only a *different* pane, so the ring means "drop here to move"
+      const over = viewAtPoint(e.clientX, e.clientY);
+      useSceneStore.getState().setDragOverView(over === viewId ? null : over);
+
       const worldPos = getWorldPosFromMouse(e.clientX, e.clientY);
       if (!worldPos) return;
 
@@ -143,7 +148,15 @@ function SingleMaterialMesh({
       });
     };
 
-    const onUp = () => {
+    const onUp = (e: PointerEvent) => {
+      useSceneStore.getState().setDragOverView(null);
+
+      // Released over a different pane → hand the material over to that view
+      const dropViewId = didDrag.current ? viewAtPoint(e.clientX, e.clientY) : null;
+      if (dropViewId !== null && dropViewId !== viewId) {
+        dropMaterialIntoView(placed.id, dropViewId, e.clientX, e.clientY);
+      }
+
       setDragging(false);
       setDraggingState(false);
       useSceneStore.getState().enableOrbit();
@@ -158,7 +171,7 @@ function SingleMaterialMesh({
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
     };
-  }, [dragging, placed, matType, height, cargoItems, allPlacedMaterials, allMaterialTypes, getWorldPosFromMouse, updateMaterialPosition, setDraggingState]);
+  }, [dragging, placed, matType, height, cargoItems, allPlacedMaterials, allMaterialTypes, viewId, getWorldPosFromMouse, updateMaterialPosition, setDraggingState]);
 
   return (
     <group

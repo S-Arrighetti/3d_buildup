@@ -10,6 +10,7 @@ import { useSceneStore } from '../../store/useSceneStore';
 import { useHistoryStore } from '../../store/useHistoryStore';
 import { useViewId, useViewCargoItems, useViewPlacedMaterials } from './ViewContext';
 import { snapPosition, findStackHeight, getEffectiveDimensions } from '../../utils/snapping';
+import { viewAtPoint, dropCargoIntoView } from '../../utils/viewDrop';
 import type { CargoItem } from '../../types';
 
 const SCALE = 0.01; // must match Scene.tsx
@@ -124,6 +125,10 @@ function SingleCargoMesh({ cargo }: { cargo: CargoItem }) {
       if (!didDrag.current && Math.sqrt(dx * dx + dy * dy) < DRAG_THRESHOLD) return;
       didDrag.current = true;
 
+      // Highlight only a *different* pane, so the ring means "drop here to move"
+      const over = viewAtPoint(e.clientX, e.clientY);
+      useSceneStore.getState().setDragOverView(over === viewId ? null : over);
+
       const worldPos = getWorldPosFromMouse(e.clientX, e.clientY);
       if (!worldPos || !pallet) return;
 
@@ -141,7 +146,20 @@ function SingleCargoMesh({ cargo }: { cargo: CargoItem }) {
       updateCargoPosition(cargo.id, snappedPos);
     };
 
-    const onUp = () => {
+    const onUp = (e: PointerEvent) => {
+      useSceneStore.getState().setDragOverView(null);
+
+      // Released over a different pane → hand the cargo over to that view
+      const dropViewId = didDrag.current ? viewAtPoint(e.clientX, e.clientY) : null;
+      if (dropViewId !== null && dropViewId !== viewId) {
+        dropCargoIntoView(cargo.id, dropViewId, e.clientX, e.clientY);
+        setDragging(false);
+        setDraggingState(false);
+        useSceneStore.getState().enableOrbit();
+        document.body.style.cursor = 'auto';
+        return;
+      }
+
       const currentCargo = useCargoStore.getState().items.find((c) => c.id === cargo.id);
       if (currentCargo && !currentCargo.placed && pallet) {
         const halfWidth = pallet.dimensions.width / 2;

@@ -14,6 +14,7 @@ interface MaterialStore {
   removePlacedMaterial: (id: string) => void;
   updateMaterialPosition: (id: string, position: Position) => void;
   updateMaterialRotation: (id: string, rotation: number) => void;
+  updateMaterial: (id: string, updates: Partial<PlacedMaterial>) => void;
   attachBeltToCargo: (materialId: string, cargoIds: string[]) => void;
   /** Clear placed materials — only the given view's when viewId is provided */
   clearAllPlaced: (viewId?: number) => void;
@@ -64,6 +65,13 @@ export const useMaterialStore = create<MaterialStore>()(
         set((s) => ({
           placedMaterials: s.placedMaterials.map((m) =>
             m.id === id ? { ...m, rotation } : m
+          ),
+        })),
+
+      updateMaterial: (id, updates) =>
+        set((s) => ({
+          placedMaterials: s.placedMaterials.map((m) =>
+            m.id === id ? { ...m, ...updates } : m
           ),
         })),
 
