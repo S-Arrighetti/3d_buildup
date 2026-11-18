@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { Edges, Text, Line } from '@react-three/drei';
+import { LABEL_FONT } from './fonts';
 import { useViewPallet } from '../../store/usePalletStore';
 import { useViewId } from './ViewContext';
 
@@ -80,6 +81,7 @@ export function PalletMesh() {
           />
           {/* Inner line label */}
           <Text
+            font={LABEL_FONT}
             position={[0, 1, -inner.width / 2 - 8]}
             fontSize={7}
             color="#ffcc00"
@@ -93,6 +95,7 @@ export function PalletMesh() {
 
       {/* Dimension labels */}
       <Text
+        font={LABEL_FONT}
         position={[0, 1, width / 2 + 15]}
         fontSize={12}
         color="#666"
@@ -102,6 +105,7 @@ export function PalletMesh() {
         {`${length} cm`}
       </Text>
       <Text
+        font={LABEL_FONT}
         position={[length / 2 + 15, 1, 0]}
         fontSize={12}
         color="#666"
@@ -114,6 +118,7 @@ export function PalletMesh() {
       {/* Height label for containers */}
       {(isContainer || isContoured) && (
         <Text
+          font={LABEL_FONT}
           position={[length / 2 + 15, height / 2, width / 2 + 15]}
           fontSize={12}
           color="#666"

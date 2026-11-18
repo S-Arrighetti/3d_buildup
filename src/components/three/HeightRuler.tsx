@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { Text } from '@react-three/drei';
+import { LABEL_FONT, LABEL_FONT_BOLD } from './fonts';
 import { useViewPallet } from '../../store/usePalletStore';
 import { useMaterialStore } from '../../store/useMaterialStore';
 import { useViewId, useViewCargoItems, useViewPlacedMaterials } from './ViewContext';
@@ -65,6 +66,7 @@ export function HeightRuler() {
             color="#888888"
           />
           <Text
+            font={LABEL_FONT}
             position={[rulerX - 15, h, rulerZ]}
             fontSize={7}
             color="#666"
@@ -91,12 +93,12 @@ export function HeightRuler() {
             color="#ff6600"
           />
           <Text
+            font={LABEL_FONT_BOLD}
             position={[rulerX - 20, maxHeight, rulerZ]}
             fontSize={9}
             color="#ff6600"
             anchorX="right"
             anchorY="middle"
-            fontWeight="bold"
           >
             {`${Math.round(maxHeight)} cm`}
           </Text>

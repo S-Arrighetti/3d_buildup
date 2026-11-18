@@ -31,3 +31,6 @@ debug_material.txt
 # Project preview / exported files
 3D_BuildUp_Model_*.html
 3D_BuildUp_Model_*.pptx
+
+# Claude Code per-machine permissions
+.claude/settings.local.json

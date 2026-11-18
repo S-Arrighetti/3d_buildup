@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import type { ThreeEvent } from '@react-three/fiber';
 import { useThree } from '@react-three/fiber';
 import { Edges, Text, Html } from '@react-three/drei';
+import { LABEL_FONT } from './fonts';
 import { useCargoStore, cargoInView } from '../../store/useCargoStore';
 import { useMaterialStore, materialsInView } from '../../store/useMaterialStore';
 import { useViewPallet } from '../../store/usePalletStore';
@@ -239,6 +240,7 @@ function SingleCargoMesh({ cargo }: { cargo: CargoItem }) {
 
       {/* Label on top */}
       <Text
+        font={LABEL_FONT}
         position={[0, cargo.dimensions.height / 2 + 5, 0]}
         fontSize={8}
         color="#333"

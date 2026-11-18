@@ -111,7 +111,9 @@ function SceneContent({ viewId, active }: { viewId: number; active: boolean }) {
         <GizmoViewport />
       </GizmoHelper>
 
-      <Environment preset="warehouse" />
+      {/* Served from public/ instead of preset="warehouse", which downloads
+          the HDR from a third-party CDN on every load. */}
+      <Environment files={`${import.meta.env.BASE_URL}hdri/empty_warehouse_01_1k.hdr`} />
     </>
   );
 }
